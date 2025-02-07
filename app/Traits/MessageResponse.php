@@ -30,4 +30,12 @@ trait MessageResponse
             'data' => $data
         ], $status);
     }
+    public function logoutSuccess(string $message, array $data = [], int $status = JsonResponse::HTTP_OK): JsonResponse
+    {
+        return response()->json([
+            'status' => $status,
+            'message' => $message,
+            'data' => $data
+        ], $status);
+    }
 }
