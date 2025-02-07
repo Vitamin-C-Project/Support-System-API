@@ -6,12 +6,31 @@ use Illuminate\Http\JsonResponse;
 
 trait MessageResponse
 {
-    function showIndexOrFail(mixed $data, string $table)
+    function showIndexOrFail(mixed $data, $status = JsonResponse::HTTP_OK)
+    {
+        $responseStatus = $status;
+        $format = [
+            "status"    => $status,
+            "message"   => "Success",
+            "data"      => $data,
+        ];
+
+        if (empty($data)) {
+            $responseStatus = JsonResponse::HTTP_NOT_FOUND;
+            $format["status"] = JsonResponse::HTTP_NOT_FOUND;
+            $format["message"] = "Data not found";
+            $format["data"] = [];
+        }
+
+        return response()->json($format, $responseStatus);
+    }
+
+    function showCreateOrFail(mixed $data, int $status = JsonResponse::HTTP_CREATED)
     {
         $format = [
-            "status"    => "000",
-            "message"   => "Success index table {$table}",
-            "data"      => $data,
+            "status"    => $status,
+            'message'   => 'Success',
+            'data'      => $data
         ];
 
         if (empty($data)) {
@@ -19,7 +38,46 @@ trait MessageResponse
             $format["data"] = [];
         }
 
-        return response()->json($format, 200);
+        return response()->json($format, $status);
+    }
+
+    function showViewOrFail(mixed $data, int $status = JsonResponse::HTTP_OK, $statusNotFound = JsonResponse::HTTP_NOT_FOUND)
+    {
+        $responseStatus = $status;
+
+        $format = [
+            "status"    => $status,
+            'message'   => 'Success',
+            'data'      => $data
+        ];
+
+        if (empty($data)) {
+            $responseStatus = $statusNotFound;
+            $format['status'] = $statusNotFound;
+            $format["message"] = "Data not found";
+            $format["data"] = [];
+        }
+
+        return response()->json($format, $responseStatus);
+    }
+
+    function showUpdateOrFail(mixed $data, int $status = JsonResponse::HTTP_OK, $statusNotFound = JsonResponse::HTTP_NOT_FOUND)
+    {
+        $responseStatus = $status;
+        $format = [
+            "status"    => $status,
+            'message'   => 'Success',
+            'data'      => $data
+        ];
+
+        if (empty($data)) {
+            $responseStatus = $statusNotFound;
+            $format['status'] = $statusNotFound;
+            $format["message"] = "Data not found";
+            $format["data"] = [];
+        }
+
+        return response()->json($format, $responseStatus);
     }
 
     public function loginSuccess(string $message, array $data = [], int $status = JsonResponse::HTTP_OK): JsonResponse
