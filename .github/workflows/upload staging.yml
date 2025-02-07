@@ -39,4 +39,4 @@ jobs:
         username: ${{ secrets.USERNAME }}
         host: ${{ secrets.HOSTNAME }}
         password: ${{ secrets.PASSWORD }}
-        script: "cd /home/MyAaPanel/Proyek/APISupportSystem && sh deploy.sh"
+        script: "sudo su && cd /home/MyAaPanel/Proyek/APISupportSystem && sh deploy.sh"
