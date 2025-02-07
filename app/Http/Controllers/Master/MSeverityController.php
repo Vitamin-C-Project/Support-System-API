@@ -26,8 +26,8 @@ class MSeverityController extends Controller
     {
         $validate = Validator::make($request->all(), [
             'per_page'  => 'integer|required',
-            'status'    => 'integer|nullable',
-            "search"    => 'string|nullable'
+            "search"    => 'string|nullable',
+            "where"     => 'array|nullable'
         ]);
 
         if ($validate->fails()) {
@@ -45,8 +45,8 @@ class MSeverityController extends Controller
 
             $severity = $this->severity->query();
 
-            if ($request->has('status')) {
-                $severity->where('status', $request->status);
+            if ($request->has('where')) {
+                $severity->where($request->where);
             }
 
             if ($request->has('search')) {

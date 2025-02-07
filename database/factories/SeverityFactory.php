@@ -17,7 +17,7 @@ class SeverityFactory extends Factory
     public function definition()
     {
         return [
-            'name' => $this->faker->word(),
+            'name' => $this->faker->randomElement(['Minor', 'Major', 'Urgent', 'Emergency']),
             'description' => $this->faker->paragraph(),
             'estimated_day' => $this->faker->date(),
             'status' => $this->faker->randomElement(['1', '0']),
