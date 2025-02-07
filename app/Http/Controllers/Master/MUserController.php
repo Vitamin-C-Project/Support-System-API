@@ -26,9 +26,8 @@ class MUserController extends Controller
     {
         $validate = Validator::make($request->all(), [
             'per_page'  => 'integer|required',
-            'status'    => 'integer|nullable',
-            'role_id'   => 'integer|nullable',
-            "search"    => 'string|nullable'
+            "search"    => 'string|nullable',
+            'where'     => 'array|nullable'
         ]);
 
         if ($validate->fails()) {
@@ -46,12 +45,8 @@ class MUserController extends Controller
 
             $user = $this->user->query();
 
-            if ($request->has('role_id')) {
-                $user->where('role_id', $request->role_id);
-            }
-
-            if ($request->has('status')) {
-                $user->where('status', $request->status);
+            if ($request->has('where')) {
+                $user->where($request->where);
             }
 
             if ($request->has('search')) {
