@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Severity;
 use App\Traits\MessageResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,14 +11,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
-class MUserController extends Controller
+class MSeverityController extends Controller
 {
     use MessageResponse;
-    protected $user;
+    protected $severity;
 
     public function __construct()
     {
-        $this->user = new User();
+        $this->severity = new Severity();
     }
 
 
@@ -27,7 +27,6 @@ class MUserController extends Controller
         $validate = Validator::make($request->all(), [
             'per_page'  => 'integer|required',
             'status'    => 'integer|nullable',
-            'role_id'   => 'integer|nullable',
             "search"    => 'string|nullable'
         ]);
 
@@ -44,21 +43,17 @@ class MUserController extends Controller
 
             DB::beginTransaction();
 
-            $user = $this->user->query();
-
-            if ($request->has('role_id')) {
-                $user->where('role_id', $request->role_id);
-            }
+            $severity = $this->severity->query();
 
             if ($request->has('status')) {
-                $user->where('status', $request->status);
+                $severity->where('status', $request->status);
             }
 
             if ($request->has('search')) {
-                $user->where('name', 'like', '%' . $request->search . '%');
+                $severity->where('name', 'like', '%' . $request->search . '%');
             }
 
-            $data = $user->paginate($per_page);
+            $data = $severity->paginate($per_page);
 
             DB::commit();
 
@@ -76,11 +71,10 @@ class MUserController extends Controller
     public function store(Request $request)
     {
         $validate = Validator::make($request->all(), [
-            'name'      => 'string|required',
-            'email'     => 'email|required',
-            'password'  => 'string|required',
-            'role_id'   => 'integer|required',
-            'status'    => 'integer|required'
+            'name'          => 'string|required',
+            'description'   => 'string|required',
+            'estimated_day'  => 'date|required',
+            'status'        => 'integer|required'
         ]);
 
         if ($validate->fails()) {
@@ -92,17 +86,16 @@ class MUserController extends Controller
 
         try {
             DB::beginTransaction();
-            $user = $this->user->create([
-                'name'      => $request->name,
-                'email'     => $request->email,
-                'password'  => Hash::make($request->password),
-                'role_id'   => $request->role_id,
-                'status'    => $request->status
+            $severity = $this->severity->create([
+                'name'              => $request->name,
+                'description'       => $request->description,
+                'estimated_day'     => $request->estimated_day,
+                'status'            => $request->status
             ]);
 
             DB::commit();
 
-            return $this->showCreateOrFail($user);
+            return $this->showCreateOrFail($severity);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
@@ -127,10 +120,10 @@ class MUserController extends Controller
 
         try {
             DB::beginTransaction();
-            $user = $this->user->where('id', $id)->first();
+            $severity = $this->severity->where('id', $id)->first();
 
             DB::commit();
-            return $this->showViewOrFail($user);
+            return $this->showViewOrFail($severity);
         } catch (\Exception) {
             DB::rollback();
             return response()->json([
@@ -143,11 +136,10 @@ class MUserController extends Controller
     public function update(Request $request, $id)
     {
         $validate = Validator::make($request->all(), [
-            'name'      => 'string|nullable',
-            'email'     => 'email|nullable',
-            'password'  => 'string|nullable',
-            'role_id'   => 'integer|nullable',
-            'status'    => 'integer|nullable'
+            'name'          => 'string|required',
+            'description'   => 'string|required',
+            'estimated_day'  => 'date|required',
+            'status'        => 'integer|required'
         ]);
 
         if ($validate->fails()) {
@@ -159,25 +151,24 @@ class MUserController extends Controller
 
         try {
             DB::beginTransaction();
-            $user = $this->user->where('id', $id)->first();
+            $severity = $this->severity->where('id', $id)->first();
 
-            if (!$user) {
+            if (!$severity) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Data not found'
                 ], 404);
             }
 
-            $user->update([
-                'name'      => $request->name ?? $user->name,
-                'email'     => $request->email ?? $user->email,
-                'password'  => Hash::make($request->password) ?? $user->password,
-                'role_id'   => $request->role_id ?? $user->role_id,
-                'status'    => $request->status ?? $user->status
+            $severity->update([
+                'name'              => $request->name,
+                'description'       => $request->description,
+                'estimated_day'     => $request->estimated_day,
+                'status'            => $request->status
             ]);
 
             DB::commit();
-            return $this->showUpdateOrFail($user);
+            return $this->showUpdateOrFail($severity);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
@@ -202,19 +193,19 @@ class MUserController extends Controller
 
         try {
             DB::beginTransaction();
-            $user = $this->user->where('id', $id)->first();
+            $severity = $this->severity->where('id', $id)->first();
 
-            if (!$user) {
+            if (!$severity) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Data not found'
                 ], 404);
             }
 
-            $user->delete();
+            $severity->delete();
 
             DB::commit();
-            return $this->showDestroyOrFail($user);
+            return $this->showDestroyOrFail($severity);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([

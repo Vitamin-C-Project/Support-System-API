@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\Master\MServerityController;
+use App\Http\Controllers\Master\MSeverityController;
 use App\Http\Controllers\Master\MUserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -12,13 +14,21 @@ Route::middleware(['guest'])->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-
     Route::post('/logout', [LogoutController::class, 'logout']);
 
     Route::group(['prefix' => 'user', 'controller' => MUserController::class], function () {
-        Route::get('/index', [MUserController::class, 'index']);
-        Route::post('/store', [MUserController::class, 'store']);
-        Route::get('/show/{id}', [MUserController::class, 'show']);
-        Route::put('/update/{id}', [MUserController::class, 'update']);
+        Route::get('/index', 'index');
+        Route::post('/store', 'store');
+        Route::get('/show/{id}', 'show');
+        Route::put('/update/{id}', 'update');
+        Route::delete('/delete/{id}', 'destroy');
+    });
+
+    Route::group(['prefix' => 'severity', 'controller' => MSeverityController::class], function () {
+        Route::get('/index', 'index');
+        Route::post('/store', 'store');
+        Route::get('/show/{id}', 'show');
+        Route::put('/update/{id}', 'update');
+        Route::delete('/delete/{id}', 'destroy');
     });
 });

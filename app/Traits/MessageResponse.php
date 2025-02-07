@@ -11,7 +11,7 @@ trait MessageResponse
         $responseStatus = $status;
         $format = [
             "status"    => $status,
-            "message"   => "Success",
+            "message"   => "Success Get Data",
             "data"      => $data,
         ];
 
@@ -29,7 +29,7 @@ trait MessageResponse
     {
         $format = [
             "status"    => $status,
-            'message'   => 'Success',
+            'message'   => 'Success Create Data',
             'data'      => $data
         ];
 
@@ -47,7 +47,7 @@ trait MessageResponse
 
         $format = [
             "status"    => $status,
-            'message'   => 'Success',
+            'message'   => 'Success View Data',
             'data'      => $data
         ];
 
@@ -66,7 +66,26 @@ trait MessageResponse
         $responseStatus = $status;
         $format = [
             "status"    => $status,
-            'message'   => 'Success',
+            'message'   => 'Success Update Data',
+            'data'      => $data
+        ];
+
+        if (empty($data)) {
+            $responseStatus = $statusNotFound;
+            $format['status'] = $statusNotFound;
+            $format["message"] = "Data not found";
+            $format["data"] = [];
+        }
+
+        return response()->json($format, $responseStatus);
+    }
+
+    function showDestroyOrFail(mixed $data, int $status = JsonResponse::HTTP_OK, $statusNotFound = JsonResponse::HTTP_NOT_FOUND)
+    {
+        $responseStatus = $status;
+        $format = [
+            "status"    => $status,
+            'message'   => 'Success Delete Data',
             'data'      => $data
         ];
 
