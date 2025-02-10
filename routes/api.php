@@ -8,6 +8,7 @@ use App\Http\Controllers\Master\MSeverityController;
 use App\Http\Controllers\Master\MTicketController;
 use App\Http\Controllers\Master\MUserController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\TicketStatusController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +18,7 @@ Route::middleware(['guest'])->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/ticket_status/index', [TicketStatusController::class, 'index']);
     Route::get('/role/index', [RoleController::class, 'index']);
     Route::get('/auth-check', [LoginController::class, 'authCheck']);
 

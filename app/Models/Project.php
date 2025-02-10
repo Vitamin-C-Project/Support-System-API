@@ -14,4 +14,11 @@ class Project extends Model
         "status" => 'integer',
         "type" => "array"
     ];
+
+    protected $with = ['user'];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }
