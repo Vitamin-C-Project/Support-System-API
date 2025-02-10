@@ -3,30 +3,30 @@
 namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Project;
 use App\Traits\MessageResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
-class MUserController extends Controller
+class MProjectController extends Controller
 {
     use MessageResponse;
-    protected $user;
+    protected $project;
 
     public function __construct()
     {
-        $this->user = new User();
+        $this->project = new Project();
     }
+
 
     public function index(Request $request)
     {
         $validate = Validator::make($request->all(), [
-            'per_page'  => 'integer|required',
-            "search"    => 'string|nullable',
-            'where'     => 'array|nullable'
+            'per_page'          => 'integer|required',
+            "search"            => 'string|nullable',
+            'where'             => 'array|nullable',
         ]);
 
         if ($validate->fails()) {
@@ -42,17 +42,17 @@ class MUserController extends Controller
 
             DB::beginTransaction();
 
-            $user = $this->user->query();
+            $project = $this->project->query();
 
             if ($request->has('where')) {
-                $user->where($request->where);
+                $project->where($request->where);
             }
 
             if ($request->has('search')) {
-                $user->where('name', 'like', '%' . $request->search . '%');
+                $project->where('name', 'like', '%' . $request->search . '%');
             }
 
-            $data = $user->paginate($per_page);
+            $data = $project->paginate($per_page);
 
             DB::commit();
 
@@ -60,20 +60,23 @@ class MUserController extends Controller
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
-                'status' => 500,
+                'status' => 'error',
                 'message' => $e->getMessage()
             ], 500);
         }
     }
 
+
     public function store(Request $request)
     {
         $validate = Validator::make($request->all(), [
-            'name'      => 'string|required',
-            'email'     => 'email|required',
-            'password'  => 'string|required',
-            'role_id'   => 'integer|required',
-            'status'    => 'integer|required'
+            'name'              => 'string|required',
+            'user_id'           => 'string|required',
+            'type'              => 'array|required',
+            'server_address'    => 'string|required',
+            'domain'            => 'string|required',
+            'status'            => 'integer|required',
+            'expired_at'        => 'date|required',
         ]);
 
         if ($validate->fails()) {
@@ -85,21 +88,23 @@ class MUserController extends Controller
 
         try {
             DB::beginTransaction();
-            $user = $this->user->create([
-                'name'      => $request->name,
-                'email'     => $request->email,
-                'password'  => Hash::make($request->password),
-                'role_id'   => $request->role_id,
-                'status'    => $request->status
+            $project = $this->project->create([
+                'name'       => $request->name,
+                'user_id'    => $request->user_id,
+                'type'       => json_encode($request->type),
+                'server'     => $request->server_address,
+                'domain'     => $request->domain,
+                'expired_at' => $request->expired_at,
+                'status'     => $request->status,
             ]);
 
             DB::commit();
 
-            return $this->showCreateOrFail($user);
+            return $this->showCreateOrFail($project);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
-                'status' => 500,
+                'status' => 'error',
                 'message' => $e->getMessage()
             ], 500);
         }
@@ -120,14 +125,14 @@ class MUserController extends Controller
 
         try {
             DB::beginTransaction();
-            $user = $this->user->where('id', $id)->first();
+            $project = $this->project->where('id', $id)->first();
 
             DB::commit();
-            return $this->showViewOrFail($user);
+            return $this->showViewOrFail($project);
         } catch (\Exception) {
             DB::rollback();
             return response()->json([
-                'status' => 400,
+                'status' => 'error',
                 'message' => 'Data not found'
             ], 404);
         }
@@ -136,11 +141,13 @@ class MUserController extends Controller
     public function update(Request $request, $id)
     {
         $validate = Validator::make($request->all(), [
-            'name'      => 'string|nullable',
-            'email'     => 'email|nullable',
-            'password'  => 'string|nullable',
-            'role_id'   => 'integer|nullable',
-            'status'    => 'integer|nullable'
+            'name'              => 'string|required',
+            'user_id'           => 'string|required',
+            'type'              => 'array|required',
+            'server_address'    => 'string|required',
+            'domain'            => 'string|required',
+            'status'            => 'integer|required',
+            'expired_at'        => 'date|required',
         ]);
 
         if ($validate->fails()) {
@@ -152,29 +159,31 @@ class MUserController extends Controller
 
         try {
             DB::beginTransaction();
-            $user = $this->user->where('id', $id)->first();
+            $project = $this->project->where('id', $id)->first();
 
-            if (!$user) {
+            if (!$project) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Data not found'
                 ], 404);
             }
 
-            $user->update([
-                'name'      => $request->name ?? $user->name,
-                'email'     => $request->email ?? $user->email,
-                'password'  => Hash::make($request->password) ?? $user->password,
-                'role_id'   => $request->role_id ?? $user->role_id,
-                'status'    => $request->status ?? $user->status
+            $project->update([
+                'name'       => $request->name,
+                'user_id'    => $request->user_id,
+                'type'       => json_encode($request->type),
+                'server'     => $request->server_address,
+                'domain'     => $request->domain,
+                'expired_at' => $request->expired_at,
+                'status'     => $request->status,
             ]);
 
             DB::commit();
-            return $this->showUpdateOrFail($user);
+            return $this->showUpdateOrFail($project);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
-                'status' => 500,
+                'status' => 'error',
                 'message' => $e->getMessage()
             ], 500);
         }
@@ -195,19 +204,19 @@ class MUserController extends Controller
 
         try {
             DB::beginTransaction();
-            $user = $this->user->where('id', $id)->first();
+            $project = $this->project->where('id', $id)->first();
 
-            if (!$user) {
+            if (!$project) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Data not found'
                 ], 404);
             }
 
-            $user->delete();
+            $project->delete();
 
             DB::commit();
-            return $this->showDestroyOrFail($user);
+            return $this->showDestroyOrFail($project);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
