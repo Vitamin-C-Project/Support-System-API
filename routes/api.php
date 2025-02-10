@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\Master\MCompanyController;
 use App\Http\Controllers\Master\MProjectController;
 use App\Http\Controllers\Master\MServerityController;
 use App\Http\Controllers\Master\MSeverityController;
@@ -49,6 +50,14 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::group(['prefix' => 'ticket', 'controller' => MTicketController::class], function () {
+        Route::get('/index', 'index');
+        Route::post('/store', 'store');
+        Route::get('/show/{id}', 'show');
+        Route::put('/update/{id}', 'update');
+        Route::delete('/delete/{id}', 'destroy');
+    });
+
+    Route::group(['prefix' => 'company', 'controller' => MCompanyController::class], function () {
         Route::get('/index', 'index');
         Route::post('/store', 'store');
         Route::get('/show/{id}', 'show');
