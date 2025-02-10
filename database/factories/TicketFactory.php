@@ -19,7 +19,7 @@ class TicketFactory extends Factory
         return [
             'project_id' => $this->faker->randomDigitNotNull(),
             'ticket_status_id' => $this->faker->randomDigitNotNull(),
-            'serverity_id' => $this->faker->randomDigitNotNull(),
+            'severity_id' => $this->faker->randomDigitNotNull(),
             'subject' => $this->faker->sentence(),
             'code' => $this->faker->uuid(),
             'type' => json_encode([$this->faker->word(), $this->faker->word()]),

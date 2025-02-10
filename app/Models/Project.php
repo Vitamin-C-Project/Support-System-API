@@ -10,5 +10,8 @@ class Project extends Model
     use HasFactory;
     protected $guarded = ['id'];
 
-    protected $casts = ["status" => 'integer'];
+    protected $casts = [
+        "status" => 'integer',
+        "type" => "array"
+    ];
 }

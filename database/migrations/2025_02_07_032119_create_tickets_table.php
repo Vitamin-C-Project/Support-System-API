@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->integer('project_id');
             $table->integer('ticket_status_id');
-            $table->integer('serverity_id');
+            $table->integer('severity_id');
             $table->string('subject');
             $table->string('code');
             $table->json('type');
