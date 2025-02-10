@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Role;
+use App\Models\TicketStatus;
 use App\Traits\MessageResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class RoleController extends Controller
+class TicketStatusController extends Controller
 {
     use MessageResponse;
-    protected $role;
+    protected $ticketStatus;
 
     public function __construct()
     {
-        $this->role = new Role();
+        $this->ticketStatus = new TicketStatus();
     }
 
     public function index(Request $request)
@@ -22,15 +22,15 @@ class RoleController extends Controller
         try {
             DB::beginTransaction();
 
-            $role = $this->role->get();
+            $ticketStatus = $this->ticketStatus->get();
 
             DB::commit();
 
-            return $this->showIndexOrFail($role);
+            return $this->showIndexOrFail($ticketStatus);
         } catch (\Exception) {
             DB::rollback();
             return response()->json([
-                'status' => 500,
+                'status' => 'error',
                 'message' => 'Data not found'
             ], 500);
         }
