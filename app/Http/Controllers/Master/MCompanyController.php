@@ -3,30 +3,29 @@
 namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Company;
 use App\Traits\MessageResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
-class MUserController extends Controller
+class MCompanyController extends Controller
 {
     use MessageResponse;
-    protected $user;
+    protected $company;
 
     public function __construct()
     {
-        $this->user = new User();
+        $this->company = new Company();
     }
 
     public function index(Request $request)
     {
         $validate = Validator::make($request->all(), [
-            'per_page'  => 'integer|required',
-            "search"    => 'string|nullable',
-            'where'     => 'array|nullable'
+            'per_page'          => 'integer|required',
+            "search"            => 'string|nullable',
+            'where'             => 'array|nullable',
         ]);
 
         if ($validate->fails()) {
@@ -42,17 +41,17 @@ class MUserController extends Controller
 
             DB::beginTransaction();
 
-            $user = $this->user->query();
+            $company = $this->company->query();
 
             if ($request->has('where')) {
-                $user->where($request->where);
+                $company->where($request->where);
             }
 
             if ($request->has('search')) {
-                $user->where('name', 'like', '%' . $request->search . '%');
+                $company->where('name', 'like', '%' . $request->search . '%');
             }
 
-            $data = $user->paginate($per_page);
+            $data = $company->paginate($per_page);
 
             DB::commit();
 
@@ -60,20 +59,23 @@ class MUserController extends Controller
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
-                'status' => 500,
+                'status' => 'error',
                 'message' => $e->getMessage()
             ], 500);
         }
     }
 
+
     public function store(Request $request)
     {
         $validate = Validator::make($request->all(), [
-            'name'      => 'string|required',
-            'email'     => 'email|required|unique:users,email',
-            'password'  => 'string|required|min:8',
-            'role_id'   => 'integer|required|exists:roles,id',
-            'status'    => 'required|in:0,1'
+            'user_id'           => 'integer|required',
+            'name'              => 'string|required',
+            'type'              => 'array|required',
+            'city'              => 'string|required',
+            'zip_code'          => 'integer|required',
+            'address'           => 'string|required',
+            'status'            => 'integer|required',
         ]);
 
         if ($validate->fails()) {
@@ -85,21 +87,23 @@ class MUserController extends Controller
 
         try {
             DB::beginTransaction();
-            $user = $this->user->create([
-                'name'      => $request->name,
-                'email'     => $request->email,
-                'password'  => Hash::make($request->password),
-                'role_id'   => $request->role_id,
-                'status'    => $request->status
+            $company = $this->company->create([
+                'user_id'    => $request->user_id,
+                'name'       => $request->name,
+                'type'       => json_encode($request->type),
+                'city'       => $request->city,
+                'zip_code'   => $request->zip_code,
+                'address'    => $request->address,
+                'status'     => $request->status,
             ]);
 
             DB::commit();
 
-            return $this->showCreateOrFail($user);
+            return $this->showCreateOrFail($company);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
-                'status' => 500,
+                'status' => 'error',
                 'message' => $e->getMessage()
             ], 500);
         }
@@ -120,14 +124,14 @@ class MUserController extends Controller
 
         try {
             DB::beginTransaction();
-            $user = $this->user->where('id', $id)->first();
+            $company = $this->company->where('id', $id)->first();
 
             DB::commit();
-            return $this->showViewOrFail($user);
+            return $this->showViewOrFail($company);
         } catch (\Exception) {
             DB::rollback();
             return response()->json([
-                'status' => 400,
+                'status' => 'error',
                 'message' => 'Data not found'
             ], 404);
         }
@@ -136,11 +140,13 @@ class MUserController extends Controller
     public function update(Request $request, $id)
     {
         $validate = Validator::make($request->all(), [
-            'name'      => 'string|required',
-            'email'     => 'email|required|unique:users,email',
-            'password'  => 'string|nullable|min:8',
-            'role_id'   => 'integer|required|exists:roles,id',
-            'status'    => 'required|in:0,1'
+            'user_id'           => 'integer|required',
+            'name'              => 'string|required',
+            'type'              => 'array|required',
+            'city'              => 'string|required',
+            'zip_code'          => 'integer|required',
+            'address'           => 'string|required',
+            'status'            => 'integer|required',
         ]);
 
         if ($validate->fails()) {
@@ -152,29 +158,31 @@ class MUserController extends Controller
 
         try {
             DB::beginTransaction();
-            $user = $this->user->where('id', $id)->first();
+            $company = $this->company->where('id', $id)->first();
 
-            if (!$user) {
+            if (!$company) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Data not found'
                 ], 404);
             }
 
-            $user->update([
-                'name'      => $request->name ?? $user->name,
-                'email'     => $request->email ?? $user->email,
-                'password'  => Hash::make($request->password) ?? $user->password,
-                'role_id'   => $request->role_id ?? $user->role_id,
-                'status'    => $request->status ?? $user->status
+            $company->update([
+                'user_id'    => $request->user_id,
+                'name'       => $request->name,
+                'type'       => json_encode($request->type),
+                'city'       => $request->city,
+                'zip_code'   => $request->zip_code,
+                'address'    => $request->address,
+                'status'     => $request->status,
             ]);
 
             DB::commit();
-            return $this->showUpdateOrFail($user);
+            return $this->showUpdateOrFail($company);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
-                'status' => 500,
+                'status' => 'error',
                 'message' => $e->getMessage()
             ], 500);
         }
@@ -195,19 +203,19 @@ class MUserController extends Controller
 
         try {
             DB::beginTransaction();
-            $user = $this->user->where('id', $id)->first();
+            $company = $this->company->where('id', $id)->first();
 
-            if (!$user) {
+            if (!$company) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Data not found'
                 ], 404);
             }
 
-            $user->delete();
+            $company->delete();
 
             DB::commit();
-            return $this->showDestroyOrFail($user);
+            return $this->showDestroyOrFail($company);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
