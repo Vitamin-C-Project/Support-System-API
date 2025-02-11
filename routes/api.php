@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AssignPicController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Master\MCompanyController;
@@ -69,6 +70,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/store', 'store');
         Route::get('/show/{id}', 'show');
         Route::put('/update/{id}', 'update');
+        Route::delete('/delete/{id}', 'destroy');
+    });
+
+    Route::group(['prefix' => 'pic', 'controller' => AssignPicController::class], function () {
+        Route::post('/store', 'store');
+        Route::post('/store-exist', 'UserExist');
         Route::delete('/delete/{id}', 'destroy');
     });
 });
