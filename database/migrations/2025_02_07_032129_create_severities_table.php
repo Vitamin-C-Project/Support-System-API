@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description');
-            $table->date('estimated_day');
+            $table->integer('estimated_day')->default(1);
             $table->enum('status', ['1', '0']);
             $table->timestamps();
         });

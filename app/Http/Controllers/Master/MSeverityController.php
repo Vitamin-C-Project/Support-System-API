@@ -69,10 +69,10 @@ class MSeverityController extends Controller
     public function store(Request $request)
     {
         $validate = Validator::make($request->all(), [
-            'name'          => 'string|required',
-            'description'   => 'string|required',
-            'estimated_day'  => 'date|required',
-            'status'        => 'integer|required'
+            'name'              => 'string|required',
+            'description'       => 'string|required',
+            'estimated_day'     => 'integer|required',
+            'status'            => 'integer|required'
         ]);
 
         if ($validate->fails()) {
@@ -122,10 +122,10 @@ class MSeverityController extends Controller
     public function update(Request $request, $id)
     {
         $validate = Validator::make($request->all(), [
-            'name'          => 'string|required',
-            'description'   => 'string|required',
-            'estimated_day'  => 'date|required',
-            'status'        => 'integer|required'
+            'name'              => 'string|required',
+            'description'       => 'string|required',
+            'estimated_day'     => 'integer|required',
+            'status'            => 'integer|required'
         ]);
 
         if ($validate->fails()) {

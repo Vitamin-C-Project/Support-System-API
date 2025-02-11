@@ -17,6 +17,7 @@ class TicketFactory extends Factory
     public function definition()
     {
         return [
+            'user_id' => $this->faker->numberBetween(1, 4),
             'project_id' => $this->faker->randomDigitNotNull(),
             'ticket_status_id' => $this->faker->randomDigitNotNull(),
             'severity_id' => $this->faker->randomDigitNotNull(),

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Company;
 use App\Models\Project;
 use App\Models\Severity;
 use App\Models\Ticket;
@@ -26,5 +27,6 @@ class DatabaseSeeder extends Seeder
         ]);
         Severity::factory()->count(10)->create();
         Ticket::factory()->count(10)->create();
+        Company::factory()->count(10)->create();
     }
 }

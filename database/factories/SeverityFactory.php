@@ -19,7 +19,7 @@ class SeverityFactory extends Factory
         return [
             'name' => $this->faker->randomElement(['Minor', 'Major', 'Urgent', 'Emergency']),
             'description' => $this->faker->paragraph(),
-            'estimated_day' => $this->faker->date(),
+            'estimated_day' => $this->faker->numberBetween(1, 31),
             'status' => $this->faker->randomElement(['1', '0']),
         ];
     }
