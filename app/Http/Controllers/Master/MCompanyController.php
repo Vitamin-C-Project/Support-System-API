@@ -62,7 +62,6 @@ class MCompanyController extends Controller
     public function store(Request $request)
     {
         $validate = Validator::make($request->all(), [
-            'user_id'           => 'integer|required',
             'name'              => 'string|required',
             'type'              => 'array|required',
             'city'              => 'string|required',
@@ -125,7 +124,6 @@ class MCompanyController extends Controller
     public function update(Request $request, $id)
     {
         $validate = Validator::make($request->all(), [
-            'user_id'           => 'integer|required',
             'name'              => 'string|required',
             'type'              => 'array|required',
             'city'              => 'string|required',
