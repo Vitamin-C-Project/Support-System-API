@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Traits\MessageResponse;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -29,10 +29,7 @@ class MCompanyController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         $per_page = $request->input('per_page', 10);
@@ -58,13 +55,9 @@ class MCompanyController extends Controller
             return $this->showIndexOrFail($data);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
-
 
     public function store(Request $request)
     {
@@ -79,16 +72,13 @@ class MCompanyController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         try {
             DB::beginTransaction();
             $company = $this->company->create([
-                'user_id'    => $request->user_id,
+                'user_id'    => Auth::user()->id,
                 'name'       => $request->name,
                 'type'       => json_encode($request->type),
                 'city'       => $request->city,
@@ -102,10 +92,7 @@ class MCompanyController extends Controller
             return $this->showCreateOrFail($company);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 
@@ -116,24 +103,22 @@ class MCompanyController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => JsonResponse::HTTP_BAD_REQUEST,
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         try {
             DB::beginTransaction();
             $company = $this->company->where('id', $id)->first();
 
+            if (!$company) {
+                return $this->showNotFound($company);
+            }
+
             DB::commit();
             return $this->showViewOrFail($company);
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Data not found'
-            ], 404);
+            return $this->showFail($e->getMessage());
         }
     }
 
@@ -150,10 +135,7 @@ class MCompanyController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         try {
@@ -161,14 +143,11 @@ class MCompanyController extends Controller
             $company = $this->company->where('id', $id)->first();
 
             if (!$company) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Data not found'
-                ], 404);
+                return $this->showNotFound($company);
             }
 
             $company->update([
-                'user_id'    => $request->user_id,
+                'user_id'    => Auth::user()->id,
                 'name'       => $request->name,
                 'type'       => json_encode($request->type),
                 'city'       => $request->city,
@@ -181,10 +160,7 @@ class MCompanyController extends Controller
             return $this->showUpdateOrFail($company);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 
@@ -195,10 +171,7 @@ class MCompanyController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => JsonResponse::HTTP_BAD_REQUEST,
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         try {
@@ -206,10 +179,7 @@ class MCompanyController extends Controller
             $company = $this->company->where('id', $id)->first();
 
             if (!$company) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Data not found'
-                ], 404);
+                return $this->showNotFound($company);
             }
 
             $company->delete();
@@ -218,10 +188,7 @@ class MCompanyController extends Controller
             return $this->showDestroyOrFail($company);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 }

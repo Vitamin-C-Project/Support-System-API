@@ -27,11 +27,7 @@ class LogoutController extends Controller
                 'user'  => $request->user()
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 500,
-                'message' => 'Logout Error',
-                'error' => 'An error occurred while logging out. Please try again later.',
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 }

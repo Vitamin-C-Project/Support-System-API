@@ -25,12 +25,15 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
+            'email'     => 'required|email',
+            'password'  => 'required'
         ]);
         try {
-
             $user = $this->user->where('email', $request->email)->first();
+
+            if ($user->status == 0) {
+                throw new \Exception('User is not active');
+            }
 
             if (!$user || !Hash::check($request->password, $user->password)) {
                 throw new \Exception('Invalid credentials');
@@ -43,16 +46,9 @@ class LoginController extends Controller
                 'user'  => $user
             ]);
         } catch (ValidationException $e) {
-            return response()->json([
-                'status' => 422,
-                'error' => 'Validation Error',
-                'messages' => $e->errors(),
-            ], 422);
+            return $this->showValidateError($e->getMessage());
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 500,
-                'messages' => $e->getMessage(),
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 

@@ -29,10 +29,7 @@ class TicketStatusController extends Controller
             return $this->showIndexOrFail($ticketStatus);
         } catch (\Exception) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Data not found'
-            ], 500);
+            return $this->showNotFound('Data not found');
         }
     }
 }

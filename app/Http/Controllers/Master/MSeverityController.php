@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Models\Severity;
 use App\Traits\MessageResponse;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -31,10 +32,7 @@ class MSeverityController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         $per_page = $request->input('per_page', 10);
@@ -58,12 +56,12 @@ class MSeverityController extends Controller
             DB::commit();
 
             return $this->showIndexOrFail($data);
+        } catch (QueryException) {
+            DB::rollback();
+            return $this->showNotFound('Data not found');
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 
@@ -78,10 +76,7 @@ class MSeverityController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         try {
@@ -98,10 +93,7 @@ class MSeverityController extends Controller
             return $this->showCreateOrFail($severity);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 
@@ -112,10 +104,7 @@ class MSeverityController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => JsonResponse::HTTP_BAD_REQUEST,
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         try {
@@ -124,12 +113,9 @@ class MSeverityController extends Controller
 
             DB::commit();
             return $this->showViewOrFail($severity);
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Data not found'
-            ], 404);
+            return $this->showFail($e->getMessage());
         }
     }
 
@@ -143,10 +129,7 @@ class MSeverityController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         try {
@@ -154,10 +137,7 @@ class MSeverityController extends Controller
             $severity = $this->severity->where('id', $id)->first();
 
             if (!$severity) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Data not found'
-                ], 404);
+                return $this->showNotFound($severity);
             }
 
             $severity->update([
@@ -171,10 +151,7 @@ class MSeverityController extends Controller
             return $this->showUpdateOrFail($severity);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 
@@ -185,10 +162,7 @@ class MSeverityController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => JsonResponse::HTTP_BAD_REQUEST,
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         try {
@@ -208,10 +182,7 @@ class MSeverityController extends Controller
             return $this->showDestroyOrFail($severity);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 }

@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Traits\MessageResponse;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -20,7 +20,6 @@ class MProjectController extends Controller
         $this->project = new Project();
     }
 
-
     public function index(Request $request)
     {
         $validate = Validator::make($request->all(), [
@@ -30,10 +29,7 @@ class MProjectController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         $per_page = $request->input('per_page', 10);
@@ -59,10 +55,7 @@ class MProjectController extends Controller
             return $this->showIndexOrFail($data);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 
@@ -80,17 +73,14 @@ class MProjectController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         try {
             DB::beginTransaction();
             $project = $this->project->create([
                 'name'       => $request->name,
-                'user_id'    => $request->user_id,
+                'user_id'    => Auth::user()->id,
                 'type'       => json_encode($request->type),
                 'server'     => $request->server_address,
                 'domain'     => $request->domain,
@@ -103,10 +93,7 @@ class MProjectController extends Controller
             return $this->showCreateOrFail($project);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showNotFound($e->getMessage());
         }
     }
 
@@ -117,24 +104,22 @@ class MProjectController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => JsonResponse::HTTP_BAD_REQUEST,
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         try {
             DB::beginTransaction();
             $project = $this->project->where('id', $id)->first();
 
+            if (!$project) {
+                return $this->showNotFound($project);
+            }
+
             DB::commit();
             return $this->showViewOrFail($project);
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Data not found'
-            ], 404);
+            return $this->showNotFound($e->getMessage());
         }
     }
 
@@ -151,10 +136,7 @@ class MProjectController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         try {
@@ -162,15 +144,12 @@ class MProjectController extends Controller
             $project = $this->project->where('id', $id)->first();
 
             if (!$project) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Data not found'
-                ], 404);
+                return $this->showNotFound($project);
             }
 
             $project->update([
                 'name'       => $request->name,
-                'user_id'    => $request->user_id,
+                'user_id'    => Auth::user()->id,
                 'type'       => json_encode($request->type),
                 'server'     => $request->server_address,
                 'domain'     => $request->domain,
@@ -182,10 +161,7 @@ class MProjectController extends Controller
             return $this->showUpdateOrFail($project);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 
@@ -196,10 +172,7 @@ class MProjectController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => JsonResponse::HTTP_BAD_REQUEST,
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         try {
@@ -207,10 +180,7 @@ class MProjectController extends Controller
             $project = $this->project->where('id', $id)->first();
 
             if (!$project) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Data not found'
-                ], 404);
+                return $this->showNotFound($project);
             }
 
             $project->delete();
@@ -219,10 +189,7 @@ class MProjectController extends Controller
             return $this->showDestroyOrFail($project);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 }

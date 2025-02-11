@@ -7,6 +7,7 @@ use App\Models\Ticket;
 use App\Traits\MessageResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -30,10 +31,7 @@ class MTicketController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         $per_page = $request->input('per_page', 10);
@@ -59,10 +57,7 @@ class MTicketController extends Controller
             return $this->showIndexOrFail($data);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 
@@ -70,6 +65,7 @@ class MTicketController extends Controller
     public function store(Request $request)
     {
         $validate = Validator::make($request->all(), [
+            'user_id'           => 'integer|required',
             'project_id'        => 'integer|required',
             'ticket_status_id'  => 'integer|required',
             'severity_id'       => 'integer|required',
@@ -80,15 +76,13 @@ class MTicketController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         try {
             DB::beginTransaction();
             $ticket = $this->ticket->create([
+                'user_id'           => Auth::user()->id,
                 'project_id'        => $request->project_id,
                 'ticket_status_id'  => $request->ticket_status_id,
                 'severity_id'       => $request->severity_id,
@@ -103,10 +97,7 @@ class MTicketController extends Controller
             return $this->showCreateOrFail($ticket);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 
@@ -117,10 +108,7 @@ class MTicketController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => JsonResponse::HTTP_BAD_REQUEST,
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showNotFound($validate->errors());
         }
 
         try {
@@ -129,18 +117,16 @@ class MTicketController extends Controller
 
             DB::commit();
             return $this->showViewOrFail($ticket);
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Data not found'
-            ], 404);
+            return $this->showNotFound($e->getMessage());
         }
     }
 
     public function update(Request $request, $id)
     {
         $validate = Validator::make($request->all(), [
+            'user_id'           => 'integer|required',
             'project_id'        => 'integer|required',
             'ticket_status_id'  => 'integer|required',
             'severity_id'       => 'integer|required',
@@ -151,10 +137,7 @@ class MTicketController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         try {
@@ -169,6 +152,7 @@ class MTicketController extends Controller
             }
 
             $ticket->update([
+                'user_id'           => Auth::user()->id,
                 'project_id'        => $request->project_id,
                 'ticket_status_id'  => $request->ticket_status_id,
                 'severity_id'       => $request->severity_id,
@@ -182,10 +166,7 @@ class MTicketController extends Controller
             return $this->showUpdateOrFail($ticket);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 
@@ -196,10 +177,7 @@ class MTicketController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => JsonResponse::HTTP_BAD_REQUEST,
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showNotFound($validate->errors());
         }
 
         try {
@@ -219,10 +197,7 @@ class MTicketController extends Controller
             return $this->showDestroyOrFail($ticket);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 }

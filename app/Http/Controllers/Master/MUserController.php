@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Traits\MessageResponse;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class MUserController extends Controller
 {
@@ -30,10 +30,7 @@ class MUserController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         $per_page = $request->input('per_page', 10);
@@ -59,10 +56,7 @@ class MUserController extends Controller
             return $this->showIndexOrFail($data);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 500,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 
@@ -77,10 +71,7 @@ class MUserController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         try {
@@ -98,10 +89,7 @@ class MUserController extends Controller
             return $this->showCreateOrFail($user);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 500,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 
@@ -112,10 +100,7 @@ class MUserController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => JsonResponse::HTTP_BAD_REQUEST,
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showNotFound($validate->errors());
         }
 
         try {
@@ -124,12 +109,9 @@ class MUserController extends Controller
 
             DB::commit();
             return $this->showViewOrFail($user);
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 400,
-                'message' => 'Data not found'
-            ], 404);
+            return $this->showNotFound($e->getMessage());
         }
     }
 
@@ -137,17 +119,19 @@ class MUserController extends Controller
     {
         $validate = Validator::make($request->all(), [
             'name'      => 'string|required',
-            'email'     => 'email|required|unique:users,email',
+            'email'     => [
+                'email',
+                'required',
+                Rule::unique('users', 'email')->ignore($id),
+            ],
             'password'  => 'string|nullable|min:8',
             'role_id'   => 'integer|required|exists:roles,id',
             'status'    => 'required|in:0,1'
         ]);
 
+
         if ($validate->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showValidateError($validate->errors());
         }
 
         try {
@@ -155,28 +139,26 @@ class MUserController extends Controller
             $user = $this->user->where('id', $id)->first();
 
             if (!$user) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Data not found'
-                ], 404);
+                return $this->showNotFound($user);
             }
 
-            $user->update([
+            $data = [
                 'name'      => $request->name ?? $user->name,
                 'email'     => $request->email ?? $user->email,
-                'password'  => Hash::make($request->password) ?? $user->password,
                 'role_id'   => $request->role_id ?? $user->role_id,
                 'status'    => $request->status ?? $user->status
-            ]);
+            ];
+
+            if ($request->password) {
+                $data['password'] = Hash::make($request->password);
+            }
+            $user->update($data);
 
             DB::commit();
             return $this->showUpdateOrFail($user);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 500,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
         }
     }
 
@@ -187,10 +169,7 @@ class MUserController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return response()->json([
-                'status' => JsonResponse::HTTP_BAD_REQUEST,
-                'message' => $validate->errors()
-            ], 400);
+            return $this->showNotFound($validate->errors());
         }
 
         try {
@@ -198,10 +177,7 @@ class MUserController extends Controller
             $user = $this->user->where('id', $id)->first();
 
             if (!$user) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Data not found'
-                ], 404);
+                return $this->showNotFound($user);
             }
 
             $user->delete();
@@ -210,10 +186,39 @@ class MUserController extends Controller
             return $this->showDestroyOrFail($user);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->showFail($e->getMessage());
+        }
+    }
+
+
+    public function activeUser(Request $request, $id)
+    {
+        $validate = Validator::make($request->all(), [
+            'status'    => 'required|in:0,1',
+        ]);
+
+        if ($validate->fails()) {
+            return $this->showNotFound($validate->errors());
+        }
+
+        try {
+
+            DB::beginTransaction();
+            $user = $this->user->findOrFail($id);
+
+            if (!$user) {
+                return $this->showNotFound($user);
+            }
+
+            $user->update([
+                'status' => $request->status
+            ]);
+
+            DB::commit();
+            return $this->showUpdateOrFail($user);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->showFail($e->getMessage());
         }
     }
 }
