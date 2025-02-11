@@ -31,6 +31,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/show/{id}', 'show');
         Route::put('/update/{id}', 'update');
         Route::delete('/delete/{id}', 'destroy');
+
+        Route::patch('/active/{id}', 'activeUser');
     });
 
     Route::group(['prefix' => 'severity', 'controller' => MSeverityController::class], function () {

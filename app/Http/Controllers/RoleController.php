@@ -27,12 +27,9 @@ class RoleController extends Controller
             DB::commit();
 
             return $this->showIndexOrFail($role);
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 500,
-                'message' => 'Data not found'
-            ], 500);
+            return $this->showNotFound('Data not found');
         }
     }
 }
