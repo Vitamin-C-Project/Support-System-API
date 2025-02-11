@@ -19,8 +19,7 @@ class TicketFactory extends Factory
     public function definition()
     {
         $project = Project::inRandomOrder()->first();
-        $initial = 'PCS'; // Default jika tidak ada project
-
+        $initial = 'PCS';
         if ($project) {
             $words = explode(' ', $project->name);
             $initials = array_map(fn($word) => strtoupper(substr($word, 0, 1)), $words);
@@ -43,7 +42,7 @@ class TicketFactory extends Factory
 
         return [
             'user_id' => $this->faker->numberBetween(1, 4),
-            'project_id' => $project ? $project->id : null, // Gunakan project_id yang dipilih
+            'project_id' => $project ? $project->id : null,
             'ticket_status_id' => $this->faker->randomDigitNotNull(),
             'severity_id' => $this->faker->randomDigitNotNull(),
             'subject' => $this->faker->sentence(),

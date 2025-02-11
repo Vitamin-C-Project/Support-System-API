@@ -165,10 +165,38 @@ class MTicketController extends Controller
 
         try {
             DB::beginTransaction();
+
             $ticket = $this->ticket->where('id', $id)->first();
 
             if (!$ticket) {
                 return $this->showNotFound($ticket);
+            }
+
+            if ($ticket->project_id != $request->project_id) {
+                $project = Project::find($request->project_id);
+                $initial = 'PCS';
+
+                if ($project) {
+                    $words = explode(' ', $project->name);
+                    $initials = array_map(fn($word) => strtoupper(substr($word, 0, 1)), $words);
+                    $initial = implode('', array_slice($initials, 0, 2));
+                }
+
+                $lastTicket = $this->ticket->where('project_id', $request->project_id)
+                    ->whereNotNull('code')
+                    ->latest('id')
+                    ->value('code');
+
+                if ($lastTicket) {
+                    $lastNumber = (int) substr($lastTicket, -3);
+                } else {
+                    $lastNumber = 0;
+                }
+
+                $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+                $newCode = "{$initial}-{$newNumber}";
+            } else {
+                $newCode = $ticket->code;
             }
 
             $ticket->update([
@@ -177,7 +205,7 @@ class MTicketController extends Controller
                 'ticket_status_id'  => $request->ticket_status_id,
                 'severity_id'       => $request->severity_id,
                 'subject'           => $request->subject,
-                'code'              => $request->code,
+                'code'              => $newCode,
                 'type'              => json_encode($request->type),
                 'description'       => $request->description
             ]);
@@ -189,6 +217,7 @@ class MTicketController extends Controller
             return $this->showFail($e->getMessage());
         }
     }
+
 
     public function destroy(Request $request, $id)
     {
