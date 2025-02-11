@@ -17,6 +17,11 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['guest'])->group(function () {
     Route::post('/login', [LoginController::class, 'login']);
 });
+Route::get('/unathenticated', function () {
+    return response()->json([
+        'message' => 'Unathenticated'
+    ]);
+})->name('login');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ticket_status/index', [TicketStatusController::class, 'index']);
