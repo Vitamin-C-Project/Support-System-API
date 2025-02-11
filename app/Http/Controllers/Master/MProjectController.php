@@ -64,7 +64,6 @@ class MProjectController extends Controller
     {
         $validate = Validator::make($request->all(), [
             'name'              => 'string|required',
-            'user_id'           => 'string|required',
             'type'              => 'array|required',
             'server_address'    => 'string|required',
             'domain'            => 'string|required',
@@ -127,7 +126,6 @@ class MProjectController extends Controller
     {
         $validate = Validator::make($request->all(), [
             'name'              => 'string|required',
-            'user_id'           => 'string|required',
             'type'              => 'array|required',
             'server_address'    => 'string|required',
             'domain'            => 'string|required',
