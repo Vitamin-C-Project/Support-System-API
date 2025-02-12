@@ -3,6 +3,7 @@
 use App\Http\Controllers\AssignPicController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\CompanyDashboardController;
 use App\Http\Controllers\Master\MCompanyController;
 use App\Http\Controllers\Master\MProjectController;
 use App\Http\Controllers\Master\MServerityController;
@@ -28,6 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ticket_status/index', [TicketStatusController::class, 'index']);
     Route::get('/role/index', [RoleController::class, 'index']);
     Route::get('/auth-check', [LoginController::class, 'authCheck']);
+    Route::get('/count-ticket-status', [CompanyDashboardController::class, 'countTicketStatus']);
 
     Route::post('/logout', [LogoutController::class, 'logout']);
 

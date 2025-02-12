@@ -18,15 +18,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        Company::factory()->count(10)->create();
         $this->call([
             RoleSeeder::class,
             UserSeeder::class,
             TicketStatusSeeder::class,
             ProjectSeeder::class
-
         ]);
         Severity::factory()->count(10)->create();
         Ticket::factory()->count(10)->create();
-        Company::factory()->count(10)->create();
     }
 }

@@ -14,7 +14,7 @@ class Ticket extends Model
 
     public function project()
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Project::class, 'project_id');
     }
 
     public function ticket_status()
@@ -25,5 +25,10 @@ class Ticket extends Model
     public function severity()
     {
         return $this->belongsTo(Severity::class);
+    }
+
+    public function status()
+    {
+        return $this->belongsTo(TicketStatus::class, 'ticket_status_id');
     }
 }
