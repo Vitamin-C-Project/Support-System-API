@@ -24,6 +24,7 @@ class MUserController extends Controller
     public function index(Request $request)
     {
         $validate = Validator::make($request->all(), [
+            'company_id' => 'integer|nullable',
             'per_page'  => 'integer|required',
             "search"    => 'string|nullable',
             'where'     => 'array|nullable'
@@ -47,6 +48,12 @@ class MUserController extends Controller
 
             if ($request->has('search')) {
                 $user->where('name', 'like', '%' . $request->search . '%');
+            }
+
+            if ($request->has('company_id')) {
+                $user->whereHas('assignPic.project.company', function ($q) use ($request) {
+                    $q->where('id', $request->company_id);
+                });
             }
 
             $data = $user->paginate($per_page);

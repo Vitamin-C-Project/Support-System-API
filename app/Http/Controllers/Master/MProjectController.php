@@ -63,6 +63,7 @@ class MProjectController extends Controller
     public function store(Request $request)
     {
         $validate = Validator::make($request->all(), [
+            'company_id'        => 'integer|required|exists:companies,id',
             'name'              => 'string|required',
             'type'              => 'array|required',
             'server_address'    => 'string|required',
@@ -78,8 +79,9 @@ class MProjectController extends Controller
         try {
             DB::beginTransaction();
             $project = $this->project->create([
-                'name'       => $request->name,
+                'company_id' => $request->company_id,
                 'user_id'    => Auth::user()->id,
+                'name'       => $request->name,
                 'type'       => json_encode($request->type),
                 'server'     => $request->server_address,
                 'domain'     => $request->domain,
@@ -125,6 +127,7 @@ class MProjectController extends Controller
     public function update(Request $request, $id)
     {
         $validate = Validator::make($request->all(), [
+            'company_id'        => 'integer|required|exists:companies,id',
             'name'              => 'string|required',
             'type'              => 'array|required',
             'server_address'    => 'string|required',
@@ -146,8 +149,9 @@ class MProjectController extends Controller
             }
 
             $project->update([
-                'name'       => $request->name,
+                'company_id' => $request->company_id,
                 'user_id'    => Auth::user()->id,
+                'name'       => $request->name,
                 'type'       => json_encode($request->type),
                 'server'     => $request->server_address,
                 'domain'     => $request->domain,

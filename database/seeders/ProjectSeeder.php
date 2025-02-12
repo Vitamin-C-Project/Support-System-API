@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Company;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -15,6 +16,7 @@ class ProjectSeeder extends Seeder
     public function run(): void
     {
         $usersId = User::get()->pluck('id');
+        $companyId = Company::get()->pluck('id');
 
         if ($usersId->isEmpty()) {
             return;
@@ -22,7 +24,8 @@ class ProjectSeeder extends Seeder
 
         for ($i = 0; $i < 10; $i++) {
             Project::factory()->create([
-                'user_id' => $usersId->random()
+                'user_id' => $usersId->random(),
+                'company_id' => $companyId->random(),
             ]);
         }
     }
