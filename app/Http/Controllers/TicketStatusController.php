@@ -27,9 +27,9 @@ class TicketStatusController extends Controller
             DB::commit();
 
             return $this->showIndexOrFail($ticketStatus);
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             DB::rollback();
-            return $this->showNotFound('Data not found');
+            return $this->showFail($e->getMessage());
         }
     }
 }

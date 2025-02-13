@@ -118,7 +118,7 @@ class MUserController extends Controller
             return $this->showViewOrFail($user);
         } catch (\Exception $e) {
             DB::rollback();
-            return $this->showNotFound($e->getMessage());
+            return $this->showFail($e->getMessage());
         }
     }
 

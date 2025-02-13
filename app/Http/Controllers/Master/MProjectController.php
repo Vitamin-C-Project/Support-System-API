@@ -94,7 +94,7 @@ class MProjectController extends Controller
             return $this->showCreateOrFail($project);
         } catch (\Exception $e) {
             DB::rollback();
-            return $this->showNotFound($e->getMessage());
+            return $this->showFail($e->getMessage());
         }
     }
 
@@ -120,7 +120,7 @@ class MProjectController extends Controller
             return $this->showViewOrFail($project);
         } catch (\Exception $e) {
             DB::rollback();
-            return $this->showNotFound($e->getMessage());
+            return $this->showFail($e->getMessage());
         }
     }
 

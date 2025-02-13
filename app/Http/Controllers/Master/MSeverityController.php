@@ -170,10 +170,7 @@ class MSeverityController extends Controller
             $severity = $this->severity->where('id', $id)->first();
 
             if (!$severity) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Data not found'
-                ], 404);
+                return $this->showNotFound($severity);
             }
 
             $severity->delete();

@@ -29,7 +29,7 @@ class RoleController extends Controller
             return $this->showIndexOrFail($role);
         } catch (\Exception $e) {
             DB::rollback();
-            return $this->showNotFound('Data not found');
+            return $this->showFail($e->getMessage());
         }
     }
 }
