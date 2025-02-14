@@ -43,7 +43,13 @@ class MUserController extends Controller
             $user = $this->user->query();
 
             if ($request->has('where')) {
-                $user->where($request->where);
+                foreach ($request->where as $column => $value) {
+                    if (is_array($value)) {
+                        $user->whereIn($column, $value);
+                    } else {
+                        $user->where($column, $value);
+                    }
+                }
             }
 
             if ($request->has('search')) {
