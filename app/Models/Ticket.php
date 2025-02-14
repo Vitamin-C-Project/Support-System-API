@@ -12,6 +12,12 @@ class Ticket extends Model
 
     protected $with = ['project', 'ticket_status', 'severity'];
 
+    public function attachment()
+    {
+        // return $this->morphMany(Attachment::class, 'attachable');
+        return $this->morphOne(Attachment::class, 'attachable');
+    }
+
     public function project()
     {
         return $this->belongsTo(Project::class, 'project_id');
