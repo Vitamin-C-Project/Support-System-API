@@ -78,6 +78,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::group(['prefix' => 'pic', 'controller' => AssignPicController::class], function () {
         Route::post('/store', 'store');
         Route::post('/store-exist', 'UserExist');
-        Route::delete('/delete/{id}', 'destroy');
+        Route::delete('/delete', 'destroy');
     });
 });
