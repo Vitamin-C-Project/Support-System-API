@@ -24,6 +24,6 @@ class Project extends Model
 
     public function company()
     {
-        return $this->hasOne(Company::class, 'id', 'company_id');
+        return $this->belongsTo(Company::class, 'company_id');
     }
 }

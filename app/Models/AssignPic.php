@@ -8,8 +8,10 @@ class AssignPic extends Model
 {
     protected $guarded = ['id'];
 
+    protected $with  = ['project'];
+
     public function project()
     {
-        return $this->hasOne(Project::class, 'id', 'project_id');
+        return $this->belongsTo(Project::class, 'project_id');
     }
 }

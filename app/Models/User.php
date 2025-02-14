@@ -57,6 +57,6 @@ class User extends Authenticatable
 
     public function assignPic()
     {
-        return $this->belongsTo(AssignPic::class, 'id');
+        return $this->belongsTo(AssignPic::class, 'id', 'user_id');
     }
 }
