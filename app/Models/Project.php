@@ -15,7 +15,7 @@ class Project extends Model
         "type" => "array"
     ];
 
-    protected $with = ['user'];
+    protected $with = ['assignPic'];
 
     public function user()
     {
@@ -25,5 +25,10 @@ class Project extends Model
     public function company()
     {
         return $this->belongsTo(Company::class, 'company_id');
+    }
+
+    public function assignPic()
+    {
+        return $this->hasMany(AssignPic::class, 'user_id');
     }
 }
