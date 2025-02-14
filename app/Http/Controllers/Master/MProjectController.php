@@ -48,6 +48,12 @@ class MProjectController extends Controller
                 $project->where('name', 'like', '%' . $request->search . '%');
             }
 
+            if ($request->has('project_id')) {
+                $project->whereHas('assignPic.user', function ($q) use ($request) {
+                    $q->where('id', 1);
+                });
+            }
+
             $data = $project->paginate($per_page);
 
             DB::commit();
