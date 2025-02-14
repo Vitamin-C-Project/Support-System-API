@@ -58,6 +58,7 @@ class CompanyDashboardController extends Controller
 
             $response = collect([1, 3, 4, 8])->map(function ($statusId) use ($ticketStatusCounts, $allStatuses) {
                 return [
+                    'status_id' => $statusId,
                     'status_name' => $allStatuses[$statusId] ?? 'Unknown',
                     'count' => $ticketStatusCounts->firstWhere('ticket_status_id', $statusId)->count ?? 0
                 ];
