@@ -3,33 +3,34 @@
 namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
+use App\Models\Attachment;
 use App\Models\Project;
 use App\Models\Ticket;
 use App\Traits\MessageResponse;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class MTicketController extends Controller
 {
     use MessageResponse;
-    protected $ticket, $project;
+    protected $ticket, $project, $attachment;
 
     public function __construct()
     {
         $this->ticket = new Ticket();
         $this->project = new Project();
+        $this->attachment = new Attachment();
     }
-
 
     public function index(Request $request)
     {
         $validate = Validator::make($request->all(), [
-            'per_page'          => 'integer|required',
-            "search"            => 'string|nullable',
-            'where'             => 'array|nullable',
+            'per_page' => 'integer|required',
+            "search"   => 'string|nullable',
+            'where'    => 'array|nullable',
         ]);
 
         if ($validate->fails()) {
@@ -39,10 +40,9 @@ class MTicketController extends Controller
         $per_page = $request->input('per_page', 10);
 
         try {
-
             DB::beginTransaction();
 
-            $ticket = $this->ticket->query();
+            $ticket = $this->ticket->with('attachment');
 
             if ($request->has('where')) {
                 $ticket->where($request->where);
@@ -72,7 +72,8 @@ class MTicketController extends Controller
             'severity_id'       => 'integer|required',
             'subject'           => 'string|required',
             'type'              => 'array|required',
-            'description'       => 'string|required'
+            'description'       => 'string|required',
+            'file'              => 'required|file|mimes:jpg,jpeg,png,pdf,docx|max:2048'
         ]);
 
         if ($validate->fails()) {
@@ -114,7 +115,14 @@ class MTicketController extends Controller
                 'subject'           => $request->subject,
                 'code'              => $code,
                 'type'              => json_encode($request->type),
-                'description'       => $request->description
+                'description'       => $request->description,
+            ]);
+
+            $path = $request->file('file')->store('attachments', 'public');
+
+            $ticket->attachment()->create([
+                'name'      => $request->file('file')->getClientOriginalName(),
+                'path'      => url('storage/' . $path),
             ]);
 
             DB::commit();
@@ -138,7 +146,7 @@ class MTicketController extends Controller
 
         try {
             DB::beginTransaction();
-            $ticket = $this->ticket->where('id', $id)->first();
+            $ticket = $this->ticket->with('attachment')->findOrFail($id);
 
             DB::commit();
             return $this->showViewOrFail($ticket);
@@ -156,7 +164,8 @@ class MTicketController extends Controller
             'severity_id'       => 'integer|required',
             'subject'           => 'string|required',
             'type'              => 'array|required',
-            'description'       => 'string|required'
+            'description'       => 'string|required',
+            'file'              => 'required|file|mimes:jpg,jpeg,png,pdf,docx|max:2048'
         ]);
 
         if ($validate->fails()) {
@@ -207,8 +216,22 @@ class MTicketController extends Controller
                 'subject'           => $request->subject,
                 'code'              => $newCode,
                 'type'              => json_encode($request->type),
-                'description'       => $request->description
+                'description'       => $request->description,
             ]);
+
+            if ($request->hasFile('file')) {
+                if ($ticket->attachment) {
+                    $path = str_replace(url('storage'), '', $ticket->attachment->path);
+                    Storage::disk('public')->delete($path);
+                }
+
+                $path = $request->file('file')->store('attachments', 'public');
+
+                $ticket->attachment()->where('id', $ticket->attachment->id)->update([
+                    'name'      => $request->file('file')->getClientOriginalName(),
+                    'path'      => url('storage/' . $path),
+                ]);
+            }
 
             DB::commit();
             return $this->showUpdateOrFail($ticket);
