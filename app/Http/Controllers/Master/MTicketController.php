@@ -42,7 +42,7 @@ class MTicketController extends Controller
         try {
             DB::beginTransaction();
 
-            $ticket = $this->ticket->with('attachment');
+            $ticket = $this->ticket->with(['attachment', 'project.company']);
 
             if ($request->has('where')) {
                 $ticket->where($request->where);
