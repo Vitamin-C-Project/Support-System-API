@@ -146,7 +146,7 @@ class MTicketController extends Controller
 
         try {
             DB::beginTransaction();
-            $ticket = $this->ticket->with('attachment')->findOrFail($id);
+            $ticket = $this->ticket->with(['attachment', 'user'])->findOrFail($id);
 
             DB::commit();
             return $this->showViewOrFail($ticket);
