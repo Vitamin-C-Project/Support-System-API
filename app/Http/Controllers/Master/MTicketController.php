@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attachment;
+use App\Models\LogTicket;
 use App\Models\Project;
 use App\Models\Ticket;
 use App\Traits\MessageResponse;
@@ -16,21 +17,22 @@ use Illuminate\Support\Facades\Validator;
 class MTicketController extends Controller
 {
     use MessageResponse;
-    protected $ticket, $project, $attachment;
+    protected $ticket, $project, $attachment, $logTicket;
 
     public function __construct()
     {
-        $this->ticket = new Ticket();
-        $this->project = new Project();
-        $this->attachment = new Attachment();
+        $this->ticket       = new Ticket();
+        $this->project      = new Project();
+        $this->attachment   = new Attachment();
+        $this->logTicket    = new LogTicket();
     }
 
     public function index(Request $request)
     {
         $validate = Validator::make($request->all(), [
-            'per_page' => 'integer|required',
-            "search"   => 'string|nullable',
-            'where'    => 'array|nullable',
+            'per_page'      => 'integer|required',
+            "search"        => 'string|nullable',
+            'where'         => 'array|nullable',
         ]);
 
         if ($validate->fails()) {
@@ -125,6 +127,15 @@ class MTicketController extends Controller
                 'path'      => url('storage/' . $path),
             ]);
 
+            $this->logTicket->create([
+                'user_id'           => Auth::user()->id,
+                'ticket_id'         => $ticket->id,
+                'ticket_status_id'  => $request->ticket_status_id,
+                'role_id'           => Auth::user()->role_id,
+                'description'       => 'Ticket Baru Dibuat',
+            ]);
+
+
             DB::commit();
 
             return $this->showCreateOrFail($ticket);
@@ -146,7 +157,7 @@ class MTicketController extends Controller
 
         try {
             DB::beginTransaction();
-            $ticket = $this->ticket->with(['attachment', 'user'])->findOrFail($id);
+            $ticket = $this->ticket->with(['attachment', 'user', 'project.company'])->findOrFail($id);
 
             DB::commit();
             return $this->showViewOrFail($ticket);
@@ -175,7 +186,7 @@ class MTicketController extends Controller
         try {
             DB::beginTransaction();
 
-            $ticket = $this->ticket->where('id', $id)->first();
+            $ticket = $this->ticket->findOrFail($id);
 
             if (!$ticket) {
                 return $this->showNotFound($ticket);
@@ -219,6 +230,14 @@ class MTicketController extends Controller
                 'description'       => $request->description,
             ]);
 
+            $this->logTicket->create([
+                'user_id'           => Auth::user()->id,
+                'ticket_id'         => $ticket->id,
+                'ticket_status_id'  => $request->ticket_status_id,
+                'role_id'           => Auth::user()->role_id,
+                'description'       => 'Ticket Baru Dibuat',
+            ]);
+
             if ($request->hasFile('file')) {
                 if ($ticket->attachment) {
                     $path = str_replace(url('storage'), '', $ticket->attachment->path);
@@ -254,19 +273,55 @@ class MTicketController extends Controller
 
         try {
             DB::beginTransaction();
-            $ticket = $this->ticket->where('id', $id)->first();
-
-            if (!$ticket) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Data not found'
-                ], 404);
-            }
+            $ticket = $this->ticket->findOrFail($id);
 
             $ticket->delete();
 
             DB::commit();
             return $this->showDestroyOrFail($ticket);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->showFail($e->getMessage());
+        }
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $validate = Validator::make($request->all(), [
+            'ticket_status_id'      => 'integer|required',
+        ]);
+
+        if ($validate->fails()) {
+            return $this->showValidateError($validate->errors());
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $ticket = $this->ticket->findOrFail($id);
+
+            $oldStatus = $ticket->ticket_status_id;
+            $newStatus = $request->ticket_status_id;
+
+            if ($oldStatus == $newStatus) {
+                return $this->showFail('Status tidak berubah');
+            }
+
+            $ticket->update([
+                'ticket_status_id' => $newStatus,
+            ]);
+
+            $this->logTicket->create([
+                'user_id'          => Auth::id(),
+                'ticket_id'        => $ticket->id,
+                'ticket_status_id' => $newStatus,
+                'role_id'          => Auth::user()->role_id,
+                'description'      => "Status ticket diubah dari {$oldStatus} ke {$newStatus}"
+            ]);
+
+            DB::commit();
+
+            return $this->showUpdateOrFail($ticket);
         } catch (\Exception $e) {
             DB::rollback();
             return $this->showFail($e->getMessage());
