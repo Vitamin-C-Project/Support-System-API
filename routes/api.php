@@ -4,6 +4,7 @@ use App\Http\Controllers\AssignPicController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\CompanyDashboardController;
+use App\Http\Controllers\LogController;
 use App\Http\Controllers\Master\MCompanyController;
 use App\Http\Controllers\Master\MProjectController;
 use App\Http\Controllers\Master\MServerityController;
@@ -65,6 +66,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/show/{id}', 'show');
         Route::put('/update/{id}', 'update');
         Route::delete('/delete/{id}', 'destroy');
+
+        Route::put('/updateStatus/{id}', 'updateStatus');
     });
 
     Route::group(['prefix' => 'company', 'controller' => MCompanyController::class], function () {
@@ -79,5 +82,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/store', 'store');
         Route::post('/store-exist', 'UserExist');
         Route::delete('/delete', 'destroy');
+    });
+
+
+    Route::group(['prefix' => 'log', 'controller' => LogController::class], function () {
+        Route::get('/index', 'index');
     });
 });
