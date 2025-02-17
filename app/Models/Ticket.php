@@ -10,7 +10,7 @@ class Ticket extends Model
     use HasFactory;
     protected $guarded = ['id'];
 
-    protected $with = ['project', 'ticket_status', 'severity'];
+    // protected $with = ['project', 'ticket_status', 'severity'];
 
     public function attachment()
     {
@@ -36,5 +36,10 @@ class Ticket extends Model
     public function status()
     {
         return $this->belongsTo(TicketStatus::class, 'ticket_status_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
