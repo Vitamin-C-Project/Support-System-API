@@ -79,7 +79,7 @@ class MTicketController extends Controller
             'subject'           => 'string|required',
             'type'              => 'array|required',
             'description'       => 'string|required',
-            'file'              => 'nullable|file|mimes:jpg,jpeg,png,pdf,docx|max:2048'
+            'file'              => 'nullable|file|mimes:jpg,jpeg,png,pdf,docx,mp4,avi,mkv,mov|max:20480',
         ]);
 
         if ($validate->fails()) {
@@ -182,7 +182,7 @@ class MTicketController extends Controller
             'subject'           => 'string|required',
             'type'              => 'array|required',
             'description'       => 'string|required',
-            'file'              => 'nullable|file|mimes:jpg,jpeg,png,pdf,docx|max:2048'
+            'file'              => 'nullable|file|mimes:jpg,jpeg,png,pdf,docx,mp4,avi,mkv,mov|max:20480',
         ]);
 
         if ($validate->fails()) {
