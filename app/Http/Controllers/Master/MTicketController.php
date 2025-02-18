@@ -7,6 +7,7 @@ use App\Models\Attachment;
 use App\Models\LogTicket;
 use App\Models\Project;
 use App\Models\Ticket;
+use App\Models\TicketAssign;
 use App\Traits\MessageResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\Validator;
 class MTicketController extends Controller
 {
     use MessageResponse;
-    protected $ticket, $project, $attachment, $logTicket;
+    protected $ticket, $project, $attachment, $logTicket, $ticketAssign;
 
     public function __construct()
     {
@@ -25,6 +26,7 @@ class MTicketController extends Controller
         $this->project      = new Project();
         $this->attachment   = new Attachment();
         $this->logTicket    = new LogTicket();
+        $this->ticketAssign = new TicketAssign();
     }
 
     public function index(Request $request)
@@ -44,7 +46,9 @@ class MTicketController extends Controller
         try {
             DB::beginTransaction();
 
-            $ticket = $this->ticket->with(['attachment', 'project.company']);
+            $ticket = $this->ticket->with(['attachment', 'project.company', 'ticketAssign' => function ($query) {
+                $query->latest()->first();
+            }, 'ticketAssign.user']);
 
             if ($request->has('where')) {
                 $ticket->where($request->where);
@@ -75,7 +79,7 @@ class MTicketController extends Controller
             'subject'           => 'string|required',
             'type'              => 'array|required',
             'description'       => 'string|required',
-            'file'              => 'required|file|mimes:jpg,jpeg,png,pdf,docx|max:2048'
+            'file'              => 'nullable|file|mimes:jpg,jpeg,png,pdf,docx|max:2048'
         ]);
 
         if ($validate->fails()) {
@@ -157,7 +161,9 @@ class MTicketController extends Controller
 
         try {
             DB::beginTransaction();
-            $ticket = $this->ticket->with(['attachment', 'user', 'project.company'])->findOrFail($id);
+            $ticket = $this->ticket->with(['attachment', 'user', 'project.company', 'ticketAssign' => function ($query) {
+                $query->latest()->first();
+            }, 'ticketAssign.user'])->findOrFail($id);
 
             DB::commit();
             return $this->showViewOrFail($ticket);
@@ -176,7 +182,7 @@ class MTicketController extends Controller
             'subject'           => 'string|required',
             'type'              => 'array|required',
             'description'       => 'string|required',
-            'file'              => 'required|file|mimes:jpg,jpeg,png,pdf,docx|max:2048'
+            'file'              => 'nullable|file|mimes:jpg,jpeg,png,pdf,docx|max:2048'
         ]);
 
         if ($validate->fails()) {
@@ -230,13 +236,28 @@ class MTicketController extends Controller
                 'description'       => $request->description,
             ]);
 
-            $this->logTicket->create([
-                'user_id'           => Auth::user()->id,
-                'ticket_id'         => $ticket->id,
-                'ticket_status_id'  => $request->ticket_status_id,
-                'role_id'           => Auth::user()->role_id,
-                'description'       => 'Ticket Baru Dibuat',
-            ]);
+            if ($request->has('user_id')) {
+                $userExist = $this->ticketAssign
+                    ->where('user_id', $request->user_id)
+                    ->where('ticket_id', $ticket->id)->first();
+                if (!$userExist) {
+                    $ticket->ticketAssign()->create([
+                        'user_id'           => $request->user_id,
+                        'ticket_id'         => $ticket->id
+                    ]);
+                }
+            }
+            $changes = $ticket->getChanges();
+
+            foreach ($changes as $field => $newValue) {
+                $this->logTicket->create([
+                    'user_id'           => Auth::user()->id,
+                    'ticket_id'         => $ticket->id,
+                    'ticket_status_id'  => $ticket->ticket_status_id,
+                    'role_id'           => Auth::user()->role_id,
+                    'description'       => "Perubahan pada {$field}: {$newValue}",
+                ]);
+            }
 
             if ($request->hasFile('file')) {
                 if ($ticket->attachment) {
@@ -260,7 +281,6 @@ class MTicketController extends Controller
         }
     }
 
-
     public function destroy(Request $request, $id)
     {
         $validate = Validator::make($request->all(), [
@@ -274,6 +294,13 @@ class MTicketController extends Controller
         try {
             DB::beginTransaction();
             $ticket = $this->ticket->findOrFail($id);
+
+            if ($ticket->attachment) {
+                $path = str_replace(url('storage'), '', $ticket->attachment->path);
+                Storage::disk('public')->delete($path);
+
+                $ticket->attachment()->delete();
+            }
 
             $ticket->delete();
 

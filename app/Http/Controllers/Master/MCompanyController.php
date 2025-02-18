@@ -38,7 +38,7 @@ class MCompanyController extends Controller
 
             DB::beginTransaction();
 
-            $company = $this->company->query();
+            $company = $this->company->with('user');
 
             if ($request->has('where')) {
                 $company->where($request->where);
@@ -46,6 +46,12 @@ class MCompanyController extends Controller
 
             if ($request->has('search')) {
                 $company->where('name', 'like', '%' . $request->search . '%');
+            }
+
+            if ($request->has('project_id')) {
+                $company->whereHas('project', function ($query) use ($request) {
+                    $query->where('id', $request->project_id);
+                });
             }
 
             $data = $company->paginate($per_page);
