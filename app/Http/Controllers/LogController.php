@@ -21,7 +21,7 @@ class LogController extends Controller
         try {
             DB::beginTransaction();
 
-            $logTicketQuery = $this->logTicket->with(['ticket', 'ticket.user', 'ticket.project.company', 'role'])
+            $logTicketQuery = $this->logTicket->with(['ticket', 'ticket.user', 'ticket.project.company', 'role', 'user'])
                 ->orderBy('created_at', 'desc');
 
             if ($request->has('ticket_id')) {

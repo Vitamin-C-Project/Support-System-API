@@ -39,7 +39,7 @@ class CommentController extends Controller
 
             DB::beginTransaction();
 
-            $comment = $this->comment->with('attachment');
+            $comment = $this->comment->with('attachment', 'user');
 
             if ($request->has('where')) {
                 $comment->where($request->where);
