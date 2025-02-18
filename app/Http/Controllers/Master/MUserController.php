@@ -62,6 +62,12 @@ class MUserController extends Controller
                 });
             }
 
+            if ($request->has('project_id')) {
+                $user->whereHas('assignPic', function ($q) use ($request) {
+                    $q->where('project_id', $request->project_id);
+                });
+            }
+
             $data = $user->paginate($per_page);
 
             DB::commit();
