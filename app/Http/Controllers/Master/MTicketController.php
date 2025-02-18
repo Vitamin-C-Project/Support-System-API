@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Attachment;
 use App\Models\LogTicket;
 use App\Models\Project;
+use App\Models\Severity;
 use App\Models\Ticket;
 use App\Models\TicketAssign;
+use App\Models\TicketStatus;
+use App\Models\User;
 use App\Traits\MessageResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -237,6 +240,13 @@ class MTicketController extends Controller
             ]);
 
             if ($request->has('user_id')) {
+                $user = User::find($request->user_id);
+                if ($user) {
+                    $userName = $user->name;
+                } else {
+                    $userName = 'User tidak ditemukan';
+                }
+
                 $userExist = $this->ticketAssign
                     ->where('user_id', $request->user_id)
                     ->where('ticket_id', $ticket->id)->first();
@@ -245,11 +255,42 @@ class MTicketController extends Controller
                         'user_id'           => $request->user_id,
                         'ticket_id'         => $ticket->id
                     ]);
+
+                    $this->logTicket->create([
+                        'user_id'           => Auth::user()->id,
+                        'ticket_id'         => $ticket->id,
+                        'ticket_status_id'  => $ticket->ticket_status_id,
+                        'role_id'           => Auth::user()->role_id,
+                        'description'       => "Penugasan user_id baru: {$userName}",
+                    ]);
+                } else {
+                    $this->logTicket->create([
+                        'user_id'           => Auth::user()->id,
+                        'ticket_id'         => $ticket->id,
+                        'ticket_status_id'  => $ticket->ticket_status_id,
+                        'role_id'           => Auth::user()->role_id,
+                        'description'       => "User_id {$userName} sudah ditugaskan kembali ke tiket.",
+                    ]);
                 }
             }
+
             $changes = $ticket->getChanges();
 
             foreach ($changes as $field => $newValue) {
+                switch ($field) {
+                    case 'severity_id':
+                        $newValue = Severity::find($newValue)->name ?? 'Severity Tidak Ditemukan';
+                        break;
+                    case 'ticket_status_id':
+                        $newValue = TicketStatus::find($newValue)->name ?? 'Status Tidak Ditemukan';
+                        break;
+                    case 'project_id':
+                        $newValue = Project::find($newValue)->name ?? 'Proyek Tidak Ditemukan';
+                        break;
+                    default:
+                        break;
+                }
+
                 $this->logTicket->create([
                     'user_id'           => Auth::user()->id,
                     'ticket_id'         => $ticket->id,
@@ -330,6 +371,9 @@ class MTicketController extends Controller
             $oldStatus = $ticket->ticket_status_id;
             $newStatus = $request->ticket_status_id;
 
+            $oldStatusName = TicketStatus::find($oldStatus)->name ?? 'Status Tidak Ditemukan';
+            $newStatusName = TicketStatus::find($newStatus)->name ?? 'Status Tidak Ditemukan';
+
             if ($oldStatus == $newStatus) {
                 return $this->showFail('Status tidak berubah');
             }
@@ -343,7 +387,7 @@ class MTicketController extends Controller
                 'ticket_id'        => $ticket->id,
                 'ticket_status_id' => $newStatus,
                 'role_id'          => Auth::user()->role_id,
-                'description'      => "Status ticket diubah dari {$oldStatus} ke {$newStatus}"
+                'description'      => "Status ticket diubah dari {$oldStatusName} ke {$newStatusName}"
             ]);
 
             DB::commit();
