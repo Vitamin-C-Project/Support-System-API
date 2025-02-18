@@ -127,12 +127,14 @@ class MTicketController extends Controller
                 'description'       => $request->description,
             ]);
 
-            $path = $request->file('file')->store('attachments', 'public');
+            if ($request->has('file')) {
+                $path = $request->file('file')->store('attachments', 'public');
 
-            $ticket->attachment()->create([
-                'name'      => $request->file('file')->getClientOriginalName(),
-                'path'      => url('storage/' . $path),
-            ]);
+                $ticket->attachment()->create([
+                    'name'      => $request->file('file')->getClientOriginalName(),
+                    'path'      => url('storage/' . $path),
+                ]);
+            }
 
             $this->logTicket->create([
                 'user_id'           => Auth::user()->id,
@@ -141,7 +143,6 @@ class MTicketController extends Controller
                 'role_id'           => Auth::user()->role_id,
                 'description'       => 'Ticket Baru Dibuat',
             ]);
-
 
             DB::commit();
 
