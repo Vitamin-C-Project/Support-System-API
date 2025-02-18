@@ -40,7 +40,7 @@ class MUserController extends Controller
 
             DB::beginTransaction();
 
-            $user = $this->user->query();
+            $user = $this->user->with('assignPic.project');
 
             if ($request->has('where')) {
                 foreach ($request->where as $column => $value) {

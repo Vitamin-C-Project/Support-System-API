@@ -63,9 +63,9 @@ class CommentController extends Controller
     public function store(Request $request)
     {
         $validate = Validator::make($request->all(), [
-            'file'          => 'required|file|mimes:jpg,jpeg,png,pdf,docx|max:2048',
             'ticket_id'     => 'integer|required',
             'description'   => 'string|required',
+            'file'          => 'nullable|file|mimes:jpg,jpeg,png,pdf,docx,mp4,avi,mkv,mov|max:20480',
         ]);
 
         if ($validate->fails()) {
@@ -127,7 +127,7 @@ class CommentController extends Controller
         $validate = Validator::make($request->all(), [
             'ticket_id'     => 'integer|required',
             'description'   => 'string|required',
-            'file'          => 'required|file|mimes:jpg,jpeg,png,pdf,docx|max:2048',
+            'file'          => 'nullable|file|mimes:jpg,jpeg,png,pdf,docx,mp4,avi,mkv,mov|max:20480',
         ]);
 
         if ($validate->fails()) {
