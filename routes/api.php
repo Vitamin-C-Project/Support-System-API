@@ -3,6 +3,7 @@
 use App\Http\Controllers\AssignPicController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CompanyDashboardController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\Master\MCompanyController;
@@ -71,6 +72,14 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::group(['prefix' => 'company', 'controller' => MCompanyController::class], function () {
+        Route::get('/index', 'index');
+        Route::post('/store', 'store');
+        Route::get('/show/{id}', 'show');
+        Route::put('/update/{id}', 'update');
+        Route::delete('/delete/{id}', 'destroy');
+    });
+
+    Route::group(['prefix' => 'comment', 'controller' => CommentController::class], function () {
         Route::get('/index', 'index');
         Route::post('/store', 'store');
         Route::get('/show/{id}', 'show');

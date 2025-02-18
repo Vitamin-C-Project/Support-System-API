@@ -14,4 +14,14 @@ class Company extends Model
         "status" => 'integer',
         "type" => "array"
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function project()
+    {
+        return $this->hasMany(Project::class, 'company_id');
+    }
 }
