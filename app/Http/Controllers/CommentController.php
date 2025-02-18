@@ -80,12 +80,14 @@ class CommentController extends Controller
                 'description'   => $request->description
             ]);
 
-            $path = $request->file('file')->store('comments', 'public');
+            if ($request->hasFile('file')) {
+                $path = $request->file('file')->store('comments', 'public');
 
-            $comment->attachment()->create([
-                'name'      => $request->file('file')->getClientOriginalName(),
-                'path'      => url('storage/' . $path),
-            ]);
+                $comment->attachment()->create([
+                    'name'      => $request->file('file')->getClientOriginalName(),
+                    'path'      => url('storage/' . $path),
+                ]);
+            }
 
             DB::commit();
 
