@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Events\TestEvent;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Traits\MessageResponse;
@@ -28,6 +29,9 @@ class LoginController extends Controller
             'email'     => 'required|email',
             'password'  => 'required'
         ]);
+
+        broadcast(new TestEvent("Hello World"))->toOthers();
+
         try {
             $user = $this->user->where('email', $request->email)->first();
 

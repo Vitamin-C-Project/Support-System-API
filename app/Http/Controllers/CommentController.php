@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\Comment\CreateCommentEvent;
 use App\Models\Comment;
 use App\Traits\MessageResponse;
 use Illuminate\Http\Request;
@@ -88,6 +89,8 @@ class CommentController extends Controller
                     'path'      => url('storage/' . $path),
                 ]);
             }
+
+            CreateCommentEvent::dispatch($comment);
 
             DB::commit();
 
