@@ -32,7 +32,7 @@ class CreateCommentEvent implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('Create.Comment.Event'),
+            new Channel('Create.Comment.Event'),
         ];
     }
 
