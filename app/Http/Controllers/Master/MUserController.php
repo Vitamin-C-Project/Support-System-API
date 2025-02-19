@@ -40,7 +40,7 @@ class MUserController extends Controller
 
             DB::beginTransaction();
 
-            $user = $this->user->query();
+            $user = $this->user->with('assignPic.project');
 
             if ($request->has('where')) {
                 foreach ($request->where as $column => $value) {
@@ -59,6 +59,12 @@ class MUserController extends Controller
             if ($request->has('company_id')) {
                 $user->whereHas('assignPic.project.company', function ($q) use ($request) {
                     $q->where('id', $request->company_id);
+                });
+            }
+
+            if ($request->has('project_id')) {
+                $user->whereHas('assignPic', function ($q) use ($request) {
+                    $q->where('project_id', $request->project_id);
                 });
             }
 

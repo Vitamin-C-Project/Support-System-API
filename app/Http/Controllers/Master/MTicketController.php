@@ -6,7 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Attachment;
 use App\Models\LogTicket;
 use App\Models\Project;
+use App\Models\Severity;
 use App\Models\Ticket;
+use App\Models\TicketAssign;
+use App\Models\TicketStatus;
+use App\Models\User;
 use App\Traits\MessageResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +21,7 @@ use Illuminate\Support\Facades\Validator;
 class MTicketController extends Controller
 {
     use MessageResponse;
-    protected $ticket, $project, $attachment, $logTicket;
+    protected $ticket, $project, $attachment, $logTicket, $ticketAssign;
 
     public function __construct()
     {
@@ -25,6 +29,7 @@ class MTicketController extends Controller
         $this->project      = new Project();
         $this->attachment   = new Attachment();
         $this->logTicket    = new LogTicket();
+        $this->ticketAssign = new TicketAssign();
     }
 
     public function index(Request $request)
@@ -44,7 +49,9 @@ class MTicketController extends Controller
         try {
             DB::beginTransaction();
 
-            $ticket = $this->ticket->with(['attachment', 'project.company']);
+            $ticket = $this->ticket->with(['attachment', 'project.company', 'ticketAssign' => function ($query) {
+                $query->latest()->first();
+            }, 'ticketAssign.user']);
 
             if ($request->has('where')) {
                 $ticket->where($request->where);
@@ -75,7 +82,7 @@ class MTicketController extends Controller
             'subject'           => 'string|required',
             'type'              => 'array|required',
             'description'       => 'string|required',
-            'file'              => 'required|file|mimes:jpg,jpeg,png,pdf,docx|max:2048'
+            'file'              => 'nullable|file|mimes:jpg,jpeg,png,pdf,docx,mp4,avi,mkv,mov|max:20480',
         ]);
 
         if ($validate->fails()) {
@@ -120,12 +127,14 @@ class MTicketController extends Controller
                 'description'       => $request->description,
             ]);
 
-            $path = $request->file('file')->store('attachments', 'public');
+            if ($request->has('file')) {
+                $path = $request->file('file')->store('attachments', 'public');
 
-            $ticket->attachment()->create([
-                'name'      => $request->file('file')->getClientOriginalName(),
-                'path'      => url('storage/' . $path),
-            ]);
+                $ticket->attachment()->create([
+                    'name'      => $request->file('file')->getClientOriginalName(),
+                    'path'      => url('storage/' . $path),
+                ]);
+            }
 
             $this->logTicket->create([
                 'user_id'           => Auth::user()->id,
@@ -134,7 +143,6 @@ class MTicketController extends Controller
                 'role_id'           => Auth::user()->role_id,
                 'description'       => 'Ticket Baru Dibuat',
             ]);
-
 
             DB::commit();
 
@@ -157,7 +165,9 @@ class MTicketController extends Controller
 
         try {
             DB::beginTransaction();
-            $ticket = $this->ticket->with(['attachment', 'user', 'project.company'])->findOrFail($id);
+            $ticket = $this->ticket->with(['attachment', 'user', 'project.company', 'ticketAssign' => function ($query) {
+                $query->latest()->first();
+            }, 'ticketAssign.user'])->findOrFail($id);
 
             DB::commit();
             return $this->showViewOrFail($ticket);
@@ -176,7 +186,7 @@ class MTicketController extends Controller
             'subject'           => 'string|required',
             'type'              => 'array|required',
             'description'       => 'string|required',
-            'file'              => 'required|file|mimes:jpg,jpeg,png,pdf,docx|max:2048'
+            'file'              => 'nullable|file|mimes:jpg,jpeg,png,pdf,docx,mp4,avi,mkv,mov|max:20480',
         ]);
 
         if ($validate->fails()) {
@@ -230,13 +240,66 @@ class MTicketController extends Controller
                 'description'       => $request->description,
             ]);
 
-            $this->logTicket->create([
-                'user_id'           => Auth::user()->id,
-                'ticket_id'         => $ticket->id,
-                'ticket_status_id'  => $request->ticket_status_id,
-                'role_id'           => Auth::user()->role_id,
-                'description'       => 'Ticket Baru Dibuat',
-            ]);
+            if ($request->has('user_id')) {
+                $user = User::find($request->user_id);
+                if ($user) {
+                    $userName = $user->name;
+                } else {
+                    $userName = 'User tidak ditemukan';
+                }
+
+                $userExist = $this->ticketAssign
+                    ->where('user_id', $request->user_id)
+                    ->where('ticket_id', $ticket->id)->first();
+                if (!$userExist) {
+                    $ticket->ticketAssign()->create([
+                        'user_id'           => $request->user_id,
+                        'ticket_id'         => $ticket->id
+                    ]);
+
+                    $this->logTicket->create([
+                        'user_id'           => Auth::user()->id,
+                        'ticket_id'         => $ticket->id,
+                        'ticket_status_id'  => $ticket->ticket_status_id,
+                        'role_id'           => Auth::user()->role_id,
+                        'description'       => "Penugasan user_id baru: {$userName}",
+                    ]);
+                } else {
+                    $this->logTicket->create([
+                        'user_id'           => Auth::user()->id,
+                        'ticket_id'         => $ticket->id,
+                        'ticket_status_id'  => $ticket->ticket_status_id,
+                        'role_id'           => Auth::user()->role_id,
+                        'description'       => "User_id {$userName} sudah ditugaskan kembali ke tiket.",
+                    ]);
+                }
+            }
+
+            $changes = $ticket->getChanges();
+
+            foreach ($changes as $field => $newValue) {
+                switch ($field) {
+                    case 'severity_id':
+                        $newValue = Severity::find($newValue)->name ?? 'Severity Tidak Ditemukan';
+                        break;
+                    case 'ticket_status_id':
+                        $newValue = TicketStatus::find($newValue)->name ?? 'Status Tidak Ditemukan';
+                        break;
+                    case 'project_id':
+                        $newValue = Project::find($newValue)->name ?? 'Proyek Tidak Ditemukan';
+                        break;
+                    default:
+                        break;
+                }
+
+                $this->logTicket->create([
+                    'user_id'           => Auth::user()->id,
+                    'ticket_id'         => $ticket->id,
+                    'ticket_status_id'  => $ticket->ticket_status_id,
+                    'role_id'           => Auth::user()->role_id,
+                    'description'       => "Perubahan pada {$field}: {$newValue}",
+                ]);
+            }
 
             if ($request->hasFile('file')) {
                 if ($ticket->attachment) {
@@ -260,7 +323,6 @@ class MTicketController extends Controller
         }
     }
 
-
     public function destroy(Request $request, $id)
     {
         $validate = Validator::make($request->all(), [
@@ -274,6 +336,13 @@ class MTicketController extends Controller
         try {
             DB::beginTransaction();
             $ticket = $this->ticket->findOrFail($id);
+
+            if ($ticket->attachment) {
+                $path = str_replace(url('storage'), '', $ticket->attachment->path);
+                Storage::disk('public')->delete($path);
+
+                $ticket->attachment()->delete();
+            }
 
             $ticket->delete();
 
@@ -303,6 +372,9 @@ class MTicketController extends Controller
             $oldStatus = $ticket->ticket_status_id;
             $newStatus = $request->ticket_status_id;
 
+            $oldStatusName = TicketStatus::find($oldStatus)->name ?? 'Status Tidak Ditemukan';
+            $newStatusName = TicketStatus::find($newStatus)->name ?? 'Status Tidak Ditemukan';
+
             if ($oldStatus == $newStatus) {
                 return $this->showFail('Status tidak berubah');
             }
@@ -316,7 +388,7 @@ class MTicketController extends Controller
                 'ticket_id'        => $ticket->id,
                 'ticket_status_id' => $newStatus,
                 'role_id'          => Auth::user()->role_id,
-                'description'      => "Status ticket diubah dari {$oldStatus} ke {$newStatus}"
+                'description'      => "Status ticket diubah dari {$oldStatusName} ke {$newStatusName}"
             ]);
 
             DB::commit();

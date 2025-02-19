@@ -47,4 +47,9 @@ class Ticket extends Model
     {
         return $this->hasMany(LogTicket::class, 'ticket_id');
     }
+
+    public function ticketAssign()
+    {
+        return $this->hasMany(TicketAssign::class, 'ticket_id');
+    }
 }

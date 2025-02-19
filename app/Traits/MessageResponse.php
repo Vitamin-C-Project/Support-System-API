@@ -73,10 +73,10 @@ trait MessageResponse
     public function showValidateError(mixed $data): JsonResponse
     {
         return response()->json([
-            "status"  => JsonResponse::HTTP_BAD_REQUEST,
+            "status"  => JsonResponse::HTTP_UNPROCESSABLE_ENTITY,
             "messages" => "Validation Error",
             "errors"  => $data, // Menggunakan `errors` karena ini error validasi
-        ], JsonResponse::HTTP_BAD_REQUEST);
+        ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
     }
 
     public function showFail(mixed $data, $status = JsonResponse::HTTP_INTERNAL_SERVER_ERROR): JsonResponse

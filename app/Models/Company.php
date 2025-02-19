@@ -14,4 +14,9 @@ class Company extends Model
         "status" => 'integer',
         "type" => "array"
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

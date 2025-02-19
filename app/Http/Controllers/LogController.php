@@ -21,10 +21,14 @@ class LogController extends Controller
         try {
             DB::beginTransaction();
 
-            $logTicket = $this->logTicket->with(['ticket', 'ticket.user', 'ticket.project.company', 'role'])
-                // ->where('ticket_id', $request->id)
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $logTicketQuery = $this->logTicket->with(['ticket', 'ticket.user', 'ticket.project.company', 'role', 'user'])
+                ->orderBy('created_at', 'desc');
+
+            if ($request->has('ticket_id')) {
+                $logTicketQuery->where('ticket_id', $request->ticket_id);
+            }
+
+            $logTicket = $logTicketQuery->get();
 
             DB::commit();
             return $this->showViewOrFail($logTicket);
