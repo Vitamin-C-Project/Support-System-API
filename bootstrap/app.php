@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         channels: __DIR__ . '/../routes/channels.php',
         attributes: ['prefix' => 'app', 'middleware' => ['auth:sanctum']],
     )
+    ->withBroadcasting(__DIR__ . '/../routes/broadcasting.php', ['prefix' => 'api', 'middleware' => ['api', 'auth:sanctum']],)
     ->withMiddleware(function (Middleware $middleware) {
         //
     })
