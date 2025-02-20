@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers\Master;
 
+use App\Events\Ticket\CreateTicketEvent;
+use App\Events\Ticket\DeleteTicketEvent;
+use App\Events\Ticket\UpdateStatusTicketEvent;
+use App\Events\Ticket\UpdateTicketEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Attachment;
 use App\Models\LogTicket;
@@ -59,6 +63,9 @@ class MTicketController extends Controller
 
             if ($request->has('search')) {
                 $ticket->where('subject', 'like', '%' . $request->search . '%');
+            }
+            if ($request->has('sort_by')) {
+                $ticket->orderByRaw($request->sort_by);
             }
 
             $data = $ticket->paginate($per_page);
@@ -135,6 +142,8 @@ class MTicketController extends Controller
                     'path'      => url('storage/' . $path),
                 ]);
             }
+
+            CreateTicketEvent::dispatch($ticket);
 
             $this->logTicket->create([
                 'user_id'           => Auth::user()->id,
@@ -315,6 +324,8 @@ class MTicketController extends Controller
                 ]);
             }
 
+            UpdateTicketEvent::dispatch($ticket);
+
             DB::commit();
             return $this->showUpdateOrFail($ticket);
         } catch (\Exception $e) {
@@ -346,6 +357,8 @@ class MTicketController extends Controller
 
             $ticket->delete();
 
+            broadcast(new DeleteTicketEvent($ticket))->toOthers();
+
             DB::commit();
             return $this->showDestroyOrFail($ticket);
         } catch (\Exception $e) {
@@ -376,12 +389,17 @@ class MTicketController extends Controller
             $newStatusName = TicketStatus::find($newStatus)->name ?? 'Status Tidak Ditemukan';
 
             if ($oldStatus == $newStatus) {
-                return $this->showFail('Status tidak berubah');
+                return response()->json([
+                    'status' => 'success',
+                    'messages' => 'Status tidak Berubah',
+                ], 200);
             }
 
             $ticket->update([
                 'ticket_status_id' => $newStatus,
             ]);
+
+            broadcast(new UpdateStatusTicketEvent($ticket))->toOthers();
 
             $this->logTicket->create([
                 'user_id'          => Auth::id(),
@@ -393,7 +411,11 @@ class MTicketController extends Controller
 
             DB::commit();
 
-            return $this->showUpdateOrFail($ticket);
+            return response()->json([
+                'status' => 'success',
+                'messages' => 'Status Update From ' . $oldStatusName . ' To ' . $newStatusName,
+                'data' => $ticket
+            ], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return $this->showFail($e->getMessage());

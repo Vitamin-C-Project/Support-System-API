@@ -13,6 +13,7 @@ use App\Http\Controllers\Master\MSeverityController;
 use App\Http\Controllers\Master\MTicketController;
 use App\Http\Controllers\Master\MUserController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\StatusTicketController;
 use App\Http\Controllers\TicketStatusController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -97,4 +98,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::group(['prefix' => 'log', 'controller' => LogController::class], function () {
         Route::get('/index', 'index');
     });
+
+    Route::get('/status-ticket/index', [StatusTicketController::class, 'index']);
 });

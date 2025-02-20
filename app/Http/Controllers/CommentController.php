@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\Comment\CreateCommentEvent;
+use App\Events\Comment\DeleteCommentEvent;
 use App\Models\Comment;
 use App\Traits\MessageResponse;
 use Illuminate\Http\Request;
@@ -90,7 +91,7 @@ class CommentController extends Controller
                 ]);
             }
 
-            CreateCommentEvent::dispatch($comment);
+            CreateCommentEvent::dispatch($comment->load(['attachment', 'user']));
 
             DB::commit();
 
@@ -177,14 +178,6 @@ class CommentController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $validate = Validator::make($request->all(), [
-            'id' => 'id|integer',
-        ]);
-
-        if ($validate->fails()) {
-            return $this->showNotFound($validate->errors());
-        }
-
         try {
             DB::beginTransaction();
             $comment = $this->comment->findOrFail($id);
@@ -197,6 +190,8 @@ class CommentController extends Controller
             }
 
             $comment->delete();
+
+            broadcast(new DeleteCommentEvent($comment->id))->toOthers();
 
             DB::commit();
             return $this->showDestroyOrFail($comment);

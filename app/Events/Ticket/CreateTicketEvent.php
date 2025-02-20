@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Events\Comment;
+namespace App\Events\Ticket;
 
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -10,7 +10,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class CreateCommentEvent implements ShouldBroadcast
+class CreateTicketEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -24,16 +24,15 @@ class CreateCommentEvent implements ShouldBroadcast
      *
      * @return array<int, \Illuminate\Broadcasting\Channel>
      */
-
     public function broadcastOn(): array
     {
         return [
-            new Channel('Create.Comment.Event'),
+            new Channel('Create.Ticket.Event'),
         ];
     }
 
     public function broadcastAs()
     {
-        return "CreateCommentEvent";
+        return "CreateTicketEvent";
     }
 }
