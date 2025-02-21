@@ -15,15 +15,11 @@ class DeleteCommentEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public function __construct(public int $id) {}
+    public function __construct(public $data, public $ticketId) {}
 
-    public function broadcastWith(): array
-    {
-        return ['id' => $this->id];
-    }
     public function broadcastOn()
     {
-        return new Channel('Delete.Comment.Event');
+        return new PrivateChannel('Delete.Comment.Event.' . $this->ticketId);
     }
 
     public function broadcastAs()

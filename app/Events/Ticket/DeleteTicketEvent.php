@@ -17,7 +17,7 @@ class DeleteTicketEvent implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-    public function __construct(public string $data) {}
+    public function __construct(public $data, public $projectId) {}
 
     // public function broadcastWith(): array
     // {
@@ -33,7 +33,8 @@ class DeleteTicketEvent implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('Delete.Ticket.Event'),
+            new PrivateChannel('Delete.Ticket.Event.' . $this->projectId),
+            new PrivateChannel('All.Ticket.Event')
         ];
     }
 

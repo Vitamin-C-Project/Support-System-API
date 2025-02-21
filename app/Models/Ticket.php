@@ -10,7 +10,7 @@ class Ticket extends Model
     use HasFactory;
     protected $guarded = ['id'];
 
-    protected $with = ['project', 'ticket_status', 'severity', 'ticketAssign'];
+    protected $with = ['project', 'ticket_status', 'severity', 'ticketAssign', 'user'];
 
     public function attachment()
     {

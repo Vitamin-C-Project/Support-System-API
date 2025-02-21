@@ -12,29 +12,33 @@ Broadcast::channel('test.channel', function () {
 
 ############################################## COMMENT ##############################################
 
-Broadcast::channel('Create.Comment.Event', function () {
+Broadcast::channel('Create.Comment.Event.{ticketId}', function () {
     return true;
 });
 
-Broadcast::channel('Delete.Comment.Event', function ($user, $id) {
+Broadcast::channel('Delete.Comment.Event.{ticketId}', function () {
     return true;
 });
 
 
 ############################################## TICKET ##############################################
 
-Broadcast::channel('Create.Ticket.Event', function () {
+Broadcast::channel('All.Ticket.Event', function () {
     return true;
 });
 
-Broadcast::channel('Delete.Ticket.Event', function ($user, $id) {
+Broadcast::channel('Create.Ticket.Event.{projectId}', function () {
     return true;
 });
 
-Broadcast::channel('Update.Ticket.Event', function ($user, $id) {
+Broadcast::channel('Delete.Ticket.Event.{projectId}', function ($user, $id) {
     return true;
 });
 
-Broadcast::channel('Update.Status.Ticket.Event', function ($user, $id) {
+Broadcast::channel('Update.Ticket.Event.{projectId}', function ($user, $id) {
+    return true;
+});
+
+Broadcast::channel('Update.Status.Ticket.Event.{projectId}', function ($user, $id) {
     return true;
 });

@@ -14,7 +14,7 @@ class UpdateStatusTicketEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public function __construct(public string $ticket) {}
+    public function __construct(public $ticket, public $projectId) {}
 
     // public function broadcastWith(): array
     // {
@@ -26,7 +26,8 @@ class UpdateStatusTicketEvent implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('Update.Status.Ticket.Event'),
+            new PrivateChannel('Update.Status.Ticket.Event.' . $this->projectId),
+            new PrivateChannel('All.Ticket.Event')
         ];
     }
     public function broadcastAs(): string

@@ -91,7 +91,7 @@ class CommentController extends Controller
                 ]);
             }
 
-            CreateCommentEvent::dispatch($comment->load(['attachment', 'user']));
+            CreateCommentEvent::dispatch($comment->load(['attachment', 'user']), $request->ticket_id);
 
             DB::commit();
 
@@ -178,9 +178,17 @@ class CommentController extends Controller
 
     public function destroy(Request $request, $id)
     {
+        DB::beginTransaction();
+
+        $comment = $this->comment->where('id', $id)->first();
+
+        if (!$comment) {
+            return $this->showNotFound(["id" => $id]);
+        }
+
+
         try {
-            DB::beginTransaction();
-            $comment = $this->comment->findOrFail($id);
+            DeleteCommentEvent::dispatch($comment->load(['attachment', 'user']), $comment->ticket_id);
 
             if ($comment->attachment) {
                 $path = str_replace(url('storage'), '', $comment->attachment->path);
@@ -190,8 +198,6 @@ class CommentController extends Controller
             }
 
             $comment->delete();
-
-            broadcast(new DeleteCommentEvent($comment->id))->toOthers();
 
             DB::commit();
             return $this->showDestroyOrFail($comment);

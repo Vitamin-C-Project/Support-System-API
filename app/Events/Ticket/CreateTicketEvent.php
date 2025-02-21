@@ -17,18 +17,12 @@ class CreateTicketEvent implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-    public function __construct(public $data) {}
+    public function __construct(public $data, public $projectId = null) {}
 
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
-     */
-    public function broadcastOn(): array
+    public function broadcastOn(): mixed
     {
-        return [
-            new Channel('Create.Ticket.Event'),
-        ];
+
+        return [new PrivateChannel('Create.Ticket.Event.' . $this->projectId), new PrivateChannel('All.Ticket.Event')];
     }
 
     public function broadcastAs()

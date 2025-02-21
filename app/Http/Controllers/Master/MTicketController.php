@@ -324,7 +324,7 @@ class MTicketController extends Controller
                 ]);
             }
 
-            UpdateTicketEvent::dispatch($ticket);
+            UpdateTicketEvent::dispatch($ticket, $ticket->project_id);
 
             DB::commit();
             return $this->showUpdateOrFail($ticket);
@@ -348,6 +348,8 @@ class MTicketController extends Controller
             DB::beginTransaction();
             $ticket = $this->ticket->findOrFail($id);
 
+            broadcast(new DeleteTicketEvent($ticket, $ticket->project_id))->toOthers();
+
             if ($ticket->attachment) {
                 $path = str_replace(url('storage'), '', $ticket->attachment->path);
                 Storage::disk('public')->delete($path);
@@ -356,8 +358,6 @@ class MTicketController extends Controller
             }
 
             $ticket->delete();
-
-            broadcast(new DeleteTicketEvent($ticket))->toOthers();
 
             DB::commit();
             return $this->showDestroyOrFail($ticket);
@@ -399,7 +399,7 @@ class MTicketController extends Controller
                 'ticket_status_id' => $newStatus,
             ]);
 
-            broadcast(new UpdateStatusTicketEvent($ticket))->toOthers();
+            broadcast(new UpdateStatusTicketEvent($ticket, $ticket->project_id))->toOthers();
 
             $this->logTicket->create([
                 'user_id'          => Auth::id(),

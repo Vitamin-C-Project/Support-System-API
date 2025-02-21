@@ -17,7 +17,7 @@ class UpdateTicketEvent implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-    public function __construct(public string $data) {}
+    public function __construct(public $data, public $projectId) {}
     /**
      * Get the channels the event should broadcast on.
      *
@@ -26,7 +26,8 @@ class UpdateTicketEvent implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('Update.Ticket.Event'),
+            new PrivateChannel('All.Ticket.Event'),
+            new PrivateChannel('Update.Ticket.Event.' . $this->projectId),
         ];
     }
 

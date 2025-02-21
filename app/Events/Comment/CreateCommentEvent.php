@@ -17,19 +17,11 @@ class CreateCommentEvent implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-    public function __construct(public $data) {}
+    public function __construct(public $data, public $ticketId) {}
 
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
-     */
-
-    public function broadcastOn(): array
+    public function broadcastOn(): mixed
     {
-        return [
-            new Channel('Create.Comment.Event'),
-        ];
+        return new PrivateChannel('Create.Comment.Event.' . $this->ticketId);
     }
 
     public function broadcastAs()
